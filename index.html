@@ -241,11 +241,18 @@ dialog h2{font-size:18px}
 <section id="login" class="login hidden">
   <div class="box">
     <h1 class="display">Планер</h1>
-    <p>Войди по ссылке из письма — пароль не нужен.</p>
+    <p>Вход для одного человека.</p>
     <form id="loginForm" class="stack">
-      <label class="field">Почта<input class="input" type="email" id="loginEmail" value="nadzen.work@gmail.com" required autocomplete="email"></label>
-      <button class="btn" type="submit">Прислать ссылку для входа</button>
+      <label class="field">Почта<input class="input" type="email" id="loginEmail" value="nadzen.work@gmail.com" required autocomplete="username"></label>
+      <label class="field">Пароль<input class="input" type="password" id="loginPass" required autocomplete="current-password"></label>
+      <button class="btn" type="submit">Войти</button>
+      <button class="linkbtn" type="button" id="forgotBtn">Забыла пароль</button>
       <p id="loginMsg" class="muted" role="status"></p>
+    </form>
+    <form id="newPassForm" class="stack hidden">
+      <label class="field">Новый пароль<input class="input" type="password" id="newPass" minlength="8" required autocomplete="new-password"></label>
+      <button class="btn" type="submit">Сохранить пароль</button>
+      <p id="newPassMsg" class="muted" role="status"></p>
     </form>
   </div>
 </section>
@@ -807,10 +814,23 @@ document.addEventListener("visibilitychange", async () => { if (document.visibil
 // ---------- вход ----------
 $("#loginForm").onsubmit = async (e) => {
   e.preventDefault();
+  $("#loginMsg").textContent = "Вхожу…";
+  const { data, error } = await sb.auth.signInWithPassword({ email: $("#loginEmail").value.trim(), password: $("#loginPass").value });
+  if (error) { $("#loginMsg").textContent = /invalid/i.test(error.message) ? "Почта или пароль не подходят." : "Не получилось: " + error.message; return; }
+  booted = true; boot(data.session);
+};
+$("#forgotBtn").onclick = async () => {
   const email = $("#loginEmail").value.trim();
-  $("#loginMsg").textContent = "Отправляю…";
-  const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: location.origin + location.pathname } });
-  $("#loginMsg").textContent = error ? "Не получилось: " + error.message : "Готово. Открой письмо на этом устройстве и нажми ссылку.";
+  $("#loginMsg").textContent = "Отправляю письмо…";
+  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+  $("#loginMsg").textContent = error ? "Не получилось: " + error.message : "Письмо отправлено. Перейди по ссылке из него — здесь появится поле для нового пароля.";
+};
+$("#newPassForm").onsubmit = async (e) => {
+  e.preventDefault();
+  const { error } = await sb.auth.updateUser({ password: $("#newPass").value });
+  if (error) { $("#newPassMsg").textContent = "Не получилось: " + error.message; return; }
+  $("#newPassForm").classList.add("hidden"); $("#loginForm").classList.remove("hidden");
+  const { data } = await sb.auth.getSession(); booted = true; boot(data.session);
 };
 $("#logoutBtn").onclick = async () => { await sb.auth.signOut(); location.reload(); };
 
@@ -823,8 +843,13 @@ async function boot(session) {
   render();
 }
 let booted = false;
-sb.auth.onAuthStateChange((ev, session) => { if (ev === "SIGNED_IN" && !booted) { booted = true; boot(session); } if (ev === "SIGNED_OUT") { booted = false; } });
-sb.auth.getSession().then(({ data }) => { if (!booted) { booted = !!data.session; boot(data.session); } });
+sb.auth.onAuthStateChange((ev, session) => {
+  if (ev === "PASSWORD_RECOVERY") { booted = true; $("#app").classList.add("hidden"); $("#login").classList.remove("hidden"); $("#loginForm").classList.add("hidden"); $("#newPassForm").classList.remove("hidden"); return; }
+  if (ev === "SIGNED_IN" && !booted) { booted = true; boot(session); }
+  if (ev === "SIGNED_OUT") { booted = false; }
+});
+const isRecovery = /type=recovery/.test(location.hash + location.search);
+sb.auth.getSession().then(({ data }) => { if (!booted && !isRecovery) { booted = !!data.session; boot(data.session); } });
 </script>
 </body>
 </html>
