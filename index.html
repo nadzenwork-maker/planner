@@ -361,6 +361,73 @@
   .ncal-check{flex:none;width:22px;height:22px;border-radius:50%;border:2px solid var(--c);background:transparent;cursor:pointer;padding:0}
   .ncal-check.on{background:var(--c)}
   @media (max-width:699px){.ncal{gap:4px}.ncal-day{min-height:54px;padding:4px}.ncal-it,.ncal-more{display:none}.ncal-dots{display:flex}.ncal-row time{min-width:84px}}
+
+  /* ---- чтение ---- */
+  :root{ --read:#8E7AA8; --read-dim:#EFEAF5; --read-label:#B0858F; }
+  .rd-hero{display:flex; align-items:flex-end; justify-content:space-between; gap:14px; flex-wrap:wrap; margin:4px 2px 4px;}
+  .rd-count{font-family:Manrope,sans-serif; font-weight:800; font-size:56px; line-height:1; color:var(--read);}
+  .rd-count small{display:block; font-family:Inter,sans-serif; font-size:13px; font-weight:600; color:var(--text-muted); margin-top:6px;}
+  .rd-year{font-size:13px; color:var(--text-muted); text-align:right}
+  .rd-bars{display:flex; align-items:flex-end; gap:5px; height:74px; margin:14px 0 4px;}
+  .rd-bar{flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; height:100%; justify-content:flex-end; background:none; border:0; padding:0; cursor:pointer; font:inherit;}
+  .rd-bar i{display:block; width:100%; max-width:26px; border-radius:6px 6px 2px 2px; background:var(--read-dim); min-height:4px;}
+  .rd-bar.cur i{background:var(--read);}
+  .rd-bar b{font-size:10px; color:var(--text-faint); font-weight:600;}
+  .rd-bar em{font-style:normal; font-size:10px; color:var(--read); font-weight:700; min-height:12px;}
+  .rd-filters{display:flex; gap:6px; flex-wrap:wrap; margin:16px 0 12px;}
+  .rd-filters .pill.active{background:var(--read); border-color:var(--read); color:#fff;}
+  .rd-grid{display:grid; grid-template-columns:1fr; gap:12px;}
+  @media (min-width:700px){ .rd-grid{grid-template-columns:1fr 1fr;} }
+  @media (min-width:1100px){ .rd-grid{grid-template-columns:1fr 1fr 1fr;} }
+  .bk{background:#FDFCFA; border:1px solid var(--border); border-radius:var(--radius); padding:14px; display:flex; gap:14px; cursor:pointer; box-shadow:var(--shadow); text-align:left; font:inherit; color:var(--text); width:100%; position:relative; overflow:hidden;}
+  .bk:hover{border-color:var(--read);}
+  .bk-cover{flex:none; width:84px; aspect-ratio:2/3; border-radius:6px; background:var(--read-dim); background-size:cover; background-position:center; display:grid; place-items:center; color:var(--read); box-shadow:0 2px 6px rgba(60,40,80,.18);}
+  .bk-cover svg{width:28px; height:28px; opacity:.7}
+  .bk-body{flex:1; min-width:0; display:flex; flex-direction:column; gap:3px;}
+  .bk-author{font-size:12px; color:var(--read-label); font-weight:600; text-transform:uppercase; letter-spacing:.04em;}
+  .bk-title{font-family:Manrope,sans-serif; font-weight:800; font-size:16px; line-height:1.25; overflow-wrap:anywhere;}
+  .bk-dates{font-size:12px; color:var(--text-faint);}
+  .bk-rates{display:grid; grid-template-columns:auto 1fr; gap:1px 10px; margin-top:6px; font-size:11.5px; color:var(--text-muted); align-items:center;}
+  .bk-stars{color:var(--read); letter-spacing:1px; font-size:12px;}
+  .bk-stars s{text-decoration:none; color:var(--border);}
+  .bk-notes{font-size:12.5px; color:var(--text-muted); margin-top:6px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;}
+  .bk-top{display:flex; align-items:center; gap:8px; min-height:20px;}
+  .bk-top .bk-author{flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .bk-status{flex:none; font-size:11px; font-weight:700; border-radius:20px; padding:2px 9px; background:var(--read-dim); color:var(--read);}
+  .bk-status.reading{background:var(--habit-dim); color:var(--habit);}
+  .bk-status.want{background:var(--surface2); color:var(--text-faint);}
+  .rd-empty{padding:26px 18px; text-align:center; color:var(--text-muted);}
+  /* карточка книги в окне — как в бумажном трекере */
+  .bt{background:#FDFCFA; border-radius:12px;}
+  .bt-head{display:flex; gap:16px; align-items:flex-start;}
+  .bt-cover{flex:none; width:110px; aspect-ratio:2/3; border-radius:8px; border:1.5px dashed var(--read-label); background:var(--read-dim); background-size:cover; background-position:center; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; color:var(--read); font-size:11.5px; text-align:center; cursor:pointer; position:relative;}
+  .bt-cover.has{border:0; box-shadow:0 3px 10px rgba(60,40,80,.22);}
+  .bt-cover.has span, .bt-cover.has svg{display:none;}
+  .bt-cover svg{width:26px; height:26px;}
+  .bt-cover input{position:absolute; inset:0; opacity:0; cursor:pointer;}
+  .bt-fields{flex:1; min-width:0; display:flex; flex-direction:column; gap:10px;}
+  .bt-line{display:flex; align-items:baseline; gap:8px;}
+  .bt-line label, .bt-lbl{font-size:13px; letter-spacing:.06em; text-transform:uppercase; color:var(--read-label); font-weight:600; flex:none;}
+  .bt-line input{flex:1; min-width:0; border:0; border-bottom:1.5px dotted #C9BFCB; background:transparent; padding:4px 2px; font:inherit; font-size:15px; color:var(--text); border-radius:0;}
+  .bt-line input:focus{outline:none; border-bottom-color:var(--read);}
+  .bt-dates{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px;}
+  .bt-dates .bt-line input{font-size:14px;}
+  .bt-dates .bt-line label{text-transform:none; letter-spacing:0; color:var(--text-muted); font-size:13px;}
+  .bt-sep{height:1.5px; background:linear-gradient(90deg, var(--read-label), transparent); opacity:.45; margin:16px 0 12px;}
+  .bt-sep.blue{background:linear-gradient(90deg, #9DAFC6, transparent);}
+  .bt-rate{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:4px 0;}
+  .bt-rate .bt-lbl{color:var(--text); font-weight:500; letter-spacing:.04em; font-size:14px;}
+  .bt-stars{display:flex; gap:4px;}
+  .bt-stars button{background:none; border:0; padding:2px; width:32px; height:32px; color:#C9B4BB; cursor:pointer;}
+  .bt-stars button svg{width:28px; height:28px; fill:transparent; stroke-width:1.4;}
+  .bt-stars button.on{color:var(--read);}
+  .bt-stars button.on svg{fill:var(--read);}
+  .bt-notes{width:100%; min-height:120px; border:0; resize:vertical; font:inherit; font-size:15px; line-height:30px; color:var(--text); padding:0 2px; background:repeating-linear-gradient(transparent 0 29px, #D7CFD9 29px 30px); background-attachment:local;}
+  .bt-notes:focus{outline:none;}
+  .bt-status{display:flex; background:var(--surface2); border-radius:10px; padding:3px; margin-top:14px;}
+  .bt-status button{flex:1; border:0; background:none; border-radius:8px; padding:7px 4px; font:inherit; font-size:13px; font-weight:600; color:var(--text-muted);}
+  .bt-status button.on{background:#fff; color:var(--read); box-shadow:var(--shadow);}
+  @media (max-width:480px){ .bt-cover{width:92px;} .bt-dates{grid-template-columns:1fr;} .rd-count{font-size:46px;} }
   .login-screen{position:fixed;inset:0;z-index:60;background:var(--bg);display:grid;place-items:center;padding:20px}
   .login-box{width:100%;max-width:380px;display:flex;flex-direction:column;gap:12px}
   .login-box h1{font-family:Manrope,sans-serif;font-weight:800;font-size:40px;margin:0}
@@ -413,6 +480,7 @@
     <div class="tabpanel" id="tab-calendar"></div>
     <div class="tabpanel" id="tab-habits"></div>
     <div class="tabpanel" id="tab-sport"></div>
+    <div class="tabpanel" id="tab-reading"></div>
     <div class="tabpanel" id="tab-goals"></div>
     <div class="tabpanel" id="tab-retro"></div>
   </main>
@@ -468,6 +536,7 @@ function icon(name, cls=''){
     settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>',
     download: '<path d="M12 3v12M7 11l5 5 5-5M5 21h14"/>',
     upload: '<path d="M12 21V9M7 13l5-5 5 5M5 3h14"/>',
+    openbook: '<path d="M2 5h6a4 4 0 014 4v11a3 3 0 00-3-3H2z"/><path d="M22 5h-6a4 4 0 00-4 4v11a3 3 0 013-3h7z"/>',
     edit: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/>'
   };
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${cls}">${paths[name]||''}</svg>`;
@@ -600,7 +669,7 @@ async function saveKey(key, value){
     }
   }
 }
-function retryAllSaves(){ persistTasks(); persistHabits(); persistSport(); persistJournal(); persistGoals(); persistSettings(); persistRetro(); }
+function retryAllSaves(){ persistBooks(); persistTasks(); persistHabits(); persistSport(); persistJournal(); persistGoals(); persistSettings(); persistRetro(); }
 window.addEventListener('online', async ()=>{
   if(storageMode!=='supabase'){
     const ok = await testSupabase();
@@ -636,7 +705,8 @@ const state = {
   journal: [],
   goalsMonthly: [], goalsWeekly: [],
   otherColor: '#5C6BAA',
-  retros: []
+  retros: [],
+  books: []
 };
 
 const persistTasks  = debounce(()=> saveKey('tasks-data',  { tasks: state.tasks, lists: state.lists }), 350);
@@ -646,6 +716,7 @@ const persistJournal = debounce(()=> saveKey('journal-data',{ journal: state.jou
 const persistGoals   = debounce(()=> saveKey('goals-data',  { goalsMonthly: state.goalsMonthly, goalsWeekly: state.goalsWeekly }), 350);
 const persistSettings = debounce(()=> saveKey('settings-data', { otherColor: state.otherColor }), 350);
 const persistRetro = debounce(()=> saveKey('retro-data', { retros: state.retros }), 350);
+const persistBooks = debounce(()=> saveKey('books-data', { books: state.books }), 350);
 
 function normalizeTasksAndLists(){
   // ensure every task has a list field (older tasks predating lists) + defaults for newer fields
@@ -672,7 +743,7 @@ function normalizeHabits(){
   });
 }
 async function loadAll(){
-  const [t, h, s, j, g, st, rt] = await Promise.all([
+  const [t, h, s, j, g, st, rt, bk] = await Promise.all([
     loadKey('tasks-data', null),
     loadKey('habits-data', null),
     loadKey('sport-data', null),
@@ -680,6 +751,7 @@ async function loadAll(){
     loadKey('goals-data', null),
     loadKey('settings-data', null),
     loadKey('retro-data', null),
+    loadKey('books-data', null),
   ]);
   if(t){
     state.tasks = t.tasks || [];
@@ -700,6 +772,7 @@ async function loadAll(){
   if(j){ state.journal=j.journal||[]; }
   if(g){ state.goalsMonthly=g.goalsMonthly||[]; state.goalsWeekly=g.goalsWeekly||[]; }
   if(st && st.otherColor){ state.otherColor = st.otherColor; }
+  if(bk){ state.books = bk.books || []; }
   if(rt){ state.retros = rt.retros || []; state.retros.forEach(r => { if(r.highlight===undefined) r.highlight=''; }); }
 }
 
@@ -710,6 +783,7 @@ const TABS = [
   { id:'calendar', label:'Календарь', icon:'calendar', title:'Календарь' },
   { id:'habits', label:'Привычки', icon:'flame', title:'Привычки' },
   { id:'sport', label:'Спорт', icon:'dumbbell', title:'Спорт' },
+  { id:'reading', label:'Чтение', icon:'openbook', title:'Чтение' },
   { id:'goals', label:'Цели', icon:'target', title:'Цели' },
   { id:'retro', label:'Ретро', icon:'book', title:'Ретро' },
 ];
@@ -741,7 +815,7 @@ function switchTab(id){
 }
 function renderActive(){
   ({ day: renderDay, tasks: renderTasks, calendar: renderCalendar, habits: renderHabits,
-     sport: renderSport, goals: renderGoals, retro: renderRetro })[activeTab]();
+     sport: renderSport, reading: renderReading, goals: renderGoals, retro: renderRetro })[activeTab]();
 }
 function renderAllHeader(){
   const d = new Date();
@@ -2589,6 +2663,7 @@ function exportBackup(){
     journal: state.journal,
     goalsMonthly: state.goalsMonthly, goalsWeekly: state.goalsWeekly,
     retros: state.retros, otherColor: state.otherColor,
+    books: state.books, bookCovers: Object.fromEntries(Object.entries(coverCache).filter(([,v])=>v)),
     exportedAt: new Date().toISOString()
   };
   const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type:'application/json' });
@@ -2611,9 +2686,10 @@ function importBackup(e){
       state.workouts = data.workouts || []; state.measurements = data.measurements || [];
       state.journal = data.journal || [];
       state.goalsMonthly = data.goalsMonthly || []; state.goalsWeekly = data.goalsWeekly || [];
+      state.books = data.books || []; Object.entries(data.bookCovers||{}).forEach(([id,v])=>{ coverCache[id]=v; saveKey('cover-'+id, v); });
       state.retros = data.retros || []; state.otherColor = data.otherColor || state.otherColor;
       normalizeTasksAndLists(); normalizeHabits();
-      persistTasks(); persistHabits(); persistSport(); persistJournal(); persistGoals(); persistRetro(); persistSettings();
+      persistTasks(); persistHabits(); persistSport(); persistJournal(); persistGoals(); persistRetro(); persistSettings(); persistBooks();
       closeModal(); renderActive();
     }catch(err){ alert('Не удалось прочитать файл — проверь, что это тот самый экспортированный JSON.'); }
   };
@@ -3139,6 +3215,176 @@ function renderGoals(){
   });
   $('#gwPrev').addEventListener('click', ()=>{ const d=parseISO(goalsWeekCursor); d.setDate(d.getDate()-7); goalsWeekCursor=isoDate(d); renderGoals(); });
   $('#gwNext').addEventListener('click', ()=>{ const d=parseISO(goalsWeekCursor); d.setDate(d.getDate()+7); goalsWeekCursor=isoDate(d); renderGoals(); });
+}
+
+
+/* ============================= ЧТЕНИЕ ============================= */
+let readMonth = monthKey(todayISO());
+let readFilter = 'all';
+const coverCache = {};
+const BOOK_STATUS = { reading:'Читаю', done:'Прочитано', want:'Хочу прочитать' };
+async function loadCover(id){
+  if(coverCache[id] !== undefined) return coverCache[id];
+  try{ coverCache[id] = await loadKey('cover-'+id, null); }catch(e){ coverCache[id] = null; }
+  return coverCache[id];
+}
+function bookStarsText(n){ n = n||0; return '★'.repeat(n) + '<s>' + '★'.repeat(5-n) + '</s>'; }
+function finishedIn(month){ return state.books.filter(b => b.status==='done' && b.end && b.end.slice(0,7)===month); }
+function pluralBooks(n){ const m=n%10, h=n%100; return m===1&&h!==11 ? 'книга' : (m>=2&&m<=4&&(h<10||h>=20)) ? 'книги' : 'книг'; }
+function bookDatesText(b){
+  if(b.start && b.end) return `${fmtHuman(b.start)} — ${fmtHuman(b.end)}`;
+  if(b.start) return `начала ${fmtHuman(b.start)}`;
+  if(b.end) return `дочитала ${fmtHuman(b.end)}`;
+  return '';
+}
+function renderReading(){
+  const [y,m] = readMonth.split('-').map(Number);
+  const monthBooks = finishedIn(readMonth);
+  const yearDone = state.books.filter(b => b.status==='done' && b.end && b.end.slice(0,4)===String(y));
+  const perMonth = Array.from({length:12}, (_,i) => finishedIn(`${y}-${pad2(i+1)}`).length);
+  const maxBar = Math.max(1, ...perMonth);
+  const MON_S = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+  const MON_PREP = ['январе','феврале','марте','апреле','мае','июне','июле','августе','сентябре','октябре','ноябре','декабре'];
+  let list;
+  if(readFilter==='month') list = monthBooks;
+  else if(readFilter==='all') list = [...state.books];
+  else list = state.books.filter(b => b.status===readFilter);
+  const rank = { reading:0, done:1, want:2 };
+  list.sort((a,b) => (rank[a.status]-rank[b.status]) || String(b.end||b.start||'').localeCompare(String(a.end||a.start||'')) || (b.createdAt||0)-(a.createdAt||0));
+  const counts = { all: state.books.length, reading: state.books.filter(b=>b.status==='reading').length, done: state.books.filter(b=>b.status==='done').length, want: state.books.filter(b=>b.status==='want').length };
+
+  $('#tab-reading').innerHTML = `
+    <div class="cal-header" style="margin-top:6px">
+      <button class="cal-nav" id="rdPrev" aria-label="Предыдущий месяц">${icon('chevLeft')}</button>
+      <h2>${MONTHS_NOM[m-1]} ${y}</h2>
+      <button class="cal-nav" id="rdNext" aria-label="Следующий месяц">${icon('chevRight')}</button>
+    </div>
+    <div class="card">
+      <div class="rd-hero">
+        <div class="rd-count">${monthBooks.length}<small>${pluralBooks(monthBooks.length)} ${(monthBooks.length%10===1 && monthBooks.length%100!==11) ? 'прочитана' : 'прочитано'} в ${MON_PREP[m-1]}</small></div>
+        <div class="rd-year">За ${y} год: <b style="color:var(--text)">${yearDone.length}</b> ${pluralBooks(yearDone.length)}${counts.reading?`<br>Сейчас читаю: ${counts.reading}`:''}</div>
+      </div>
+      <div class="rd-bars" role="group" aria-label="Книги по месяцам">
+        ${perMonth.map((n,i) => `<button class="rd-bar ${i===m-1?'cur':''}" data-rdm="${y}-${pad2(i+1)}" aria-label="${MONTHS_NOM[i]}: ${n}"><em>${n||''}</em><i style="height:${Math.round(n/maxBar*52)+4}px"></i><b>${MON_S[i]}</b></button>`).join('')}
+      </div>
+    </div>
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+      <div class="rd-filters" role="group" aria-label="Фильтр">
+        ${[['all','Все'],['month','За месяц'],['reading','Читаю'],['done','Прочитано'],['want','Хочу']].map(([k,n]) => `<button class="pill ${readFilter===k?'active':''}" data-rdf="${k}">${n}${k==='month'?` · ${monthBooks.length}`:counts[k]!==undefined?` · ${counts[k]}`:''}</button>`).join('')}
+      </div>
+      <button class="btn btn-primary" id="rdAdd" style="background:var(--read); color:#fff; display:flex; align-items:center; gap:6px;">${icon('plus')} Книга</button>
+    </div>
+    ${list.length ? `<div class="rd-grid">${list.map(b => `
+      <button class="bk" data-book="${b.id}">
+        <span class="bk-cover" data-cover="${b.id}">${b.hasCover ? '' : icon('openbook')}</span>
+        <span class="bk-body">
+          <span class="bk-top"><span class="bk-author">${escapeHtml(b.author||'')}</span><span class="bk-status ${b.status}">${BOOK_STATUS[b.status]}</span></span>
+          <span class="bk-title">${escapeHtml(b.title || 'Без названия')}</span>
+          ${bookDatesText(b) ? `<span class="bk-dates">${bookDatesText(b)}</span>` : ''}
+          ${(b.plot||b.chars||b.atmo) ? `<span class="bk-rates">
+            <span>Сюжет</span><span class="bk-stars">${bookStarsText(b.plot)}</span>
+            <span>Персонажи</span><span class="bk-stars">${bookStarsText(b.chars)}</span>
+            <span>Атмосфера</span><span class="bk-stars">${bookStarsText(b.atmo)}</span>
+          </span>` : ''}
+          ${b.notes ? `<span class="bk-notes">${escapeHtml(b.notes)}</span>` : ''}
+        </span>
+      </button>`).join('')}</div>`
+      : `<div class="card rd-empty">${readFilter==='month' ? `В ${MON_PREP[m-1]} пока ничего не дочитано.` : 'Здесь пока пусто. Добавь книгу, которую читаешь сейчас.'}</div>`}
+  `;
+  $('#rdPrev').addEventListener('click', ()=>{ readMonth = shiftMonth(readMonth,-1); renderReading(); });
+  $('#rdNext').addEventListener('click', ()=>{ readMonth = shiftMonth(readMonth,1); renderReading(); });
+  $$('[data-rdm]').forEach(b => b.addEventListener('click', ()=>{ readMonth = b.dataset.rdm; readFilter = 'month'; renderReading(); }));
+  $$('[data-rdf]').forEach(b => b.addEventListener('click', ()=>{ readFilter = b.dataset.rdf; renderReading(); }));
+  $('#rdAdd').addEventListener('click', ()=> openBookModal(null));
+  $$('[data-book]').forEach(b => b.addEventListener('click', ()=> openBookModal(b.dataset.book)));
+  // обложки подгружаем отдельно, чтобы раздел открывался быстро
+  list.filter(b => b.hasCover).forEach(async b => {
+    const src = await loadCover(b.id);
+    const el = document.querySelector(`[data-cover="${b.id}"]`);
+    if(el && src){ el.style.backgroundImage = `url('${src}')`; el.innerHTML = ''; }
+  });
+}
+
+function openBookModal(id){
+  const existing = id ? state.books.find(b => b.id===id) : null;
+  const d = existing ? JSON.parse(JSON.stringify(existing)) : { id: uid(), title:'', author:'', status:'reading', start: todayISO(), end:null, plot:0, chars:0, atmo:0, notes:'', hasCover:false, createdAt: Date.now() };
+  let cover = existing && existing.hasCover ? (coverCache[d.id] || null) : null;
+  let coverChanged = false;
+  const html = `
+    <div class="bt">
+      <div class="bt-head">
+        <label class="bt-cover ${cover?'has':''}" id="btCover" ${cover?`style="background-image:url('${cover}')"`:''}>
+          ${icon('camera')}<span>Загрузить<br>обложку</span>
+          <input type="file" accept="image/*" id="btCoverInput" aria-label="Загрузить обложку">
+        </label>
+        <div class="bt-fields">
+          <div class="bt-line"><label for="btAuthor">Автор:</label><input id="btAuthor" value="${escapeHtml(d.author)}" autocomplete="off"></div>
+          <div class="bt-line"><label for="btTitle">Название:</label><input id="btTitle" value="${escapeHtml(d.title)}" autocomplete="off"></div>
+          <div class="bt-status" role="group" aria-label="Статус">
+            ${Object.entries(BOOK_STATUS).map(([k,n]) => `<button type="button" data-bst="${k}" class="${d.status===k?'on':''}">${n}</button>`).join('')}
+          </div>
+        </div>
+      </div>
+      <div class="bt-dates">
+        <div class="bt-line"><label for="btStart">Начало:</label><input type="date" id="btStart" value="${d.start||''}"></div>
+        <div class="bt-line"><label for="btEnd">Конец:</label><input type="date" id="btEnd" value="${d.end||''}"></div>
+      </div>
+      <div class="bt-sep"></div>
+      ${[['plot','Сюжет'],['chars','Персонажи'],['atmo','Атмосфера']].map(([k,n]) => `
+        <div class="bt-rate"><span class="bt-lbl">${n}</span><div class="bt-stars" data-rate="${k}" role="group" aria-label="${n}"></div></div>`).join('')}
+      <div class="bt-sep blue"></div>
+      <div class="bt-lbl" style="margin-bottom:4px">Заметки</div>
+      <textarea class="bt-notes" id="btNotes" placeholder="Мысли, цитаты, что запомнилось…">${escapeHtml(d.notes)}</textarea>
+      <div class="modal-actions">
+        ${existing ? `<button class="btn" id="btDelete" style="flex:0 0 auto; color:var(--danger)">${icon('trash')}</button>` : ''}
+        ${cover ? `<button class="btn" id="btCoverRemove" style="flex:0 0 auto">Убрать обложку</button>` : ''}
+        <button class="btn btn-primary" id="btSave" style="background:var(--read); color:#fff">Сохранить</button>
+      </div>
+    </div>`;
+  openModal(html, root => {
+    const drawStars = () => $$('[data-rate]', root).forEach(box => {
+      const k = box.dataset.rate;
+      box.innerHTML = [1,2,3,4,5].map(n => `<button type="button" class="${n<=(d[k]||0)?'on':''}" data-v="${n}" aria-label="${n} из 5">${icon('star')}</button>`).join('');
+      $$('button', box).forEach(b => b.addEventListener('click', ()=>{ const v = Number(b.dataset.v); d[k] = d[k]===v ? 0 : v; drawStars(); }));
+    });
+    drawStars();
+    $$('[data-bst]', root).forEach(b => b.addEventListener('click', ()=>{
+      d.status = b.dataset.bst;
+      $$('[data-bst]', root).forEach(x => x.classList.toggle('on', x===b));
+      if(d.status==='done' && !$('#btEnd', root).value) $('#btEnd', root).value = todayISO();
+      if(d.status==='reading' && !$('#btStart', root).value) $('#btStart', root).value = todayISO();
+    }));
+    $('#btCoverInput', root).addEventListener('change', async e => {
+      const file = e.target.files[0]; if(!file) return;
+      try{
+        cover = await compressImage(file, 360, 0.72); coverChanged = true;
+        const el = $('#btCover', root); el.classList.add('has'); el.style.backgroundImage = `url('${cover}')`;
+      }catch(err){ alert('Не получилось прочитать картинку. Попробуй другой файл.'); }
+    });
+    const rm = $('#btCoverRemove', root);
+    if(rm) rm.addEventListener('click', ()=>{ cover = null; coverChanged = true; const el = $('#btCover', root); el.classList.remove('has'); el.style.backgroundImage = ''; rm.remove(); });
+    const del = $('#btDelete', root);
+    if(del) del.addEventListener('click', ()=>{
+      if(!confirm(`Удалить книгу «${d.title || 'без названия'}»?`)) return;
+      state.books = state.books.filter(b => b.id!==d.id);
+      if(existing.hasCover){ coverCache[d.id] = null; saveKey('cover-'+d.id, null); }
+      persistBooks(); closeModal(); renderReading();
+    });
+    $('#btSave', root).addEventListener('click', ()=>{
+      d.author = $('#btAuthor', root).value.trim();
+      d.title = $('#btTitle', root).value.trim();
+      d.start = $('#btStart', root).value || null;
+      d.end = $('#btEnd', root).value || null;
+      d.notes = $('#btNotes', root).value.trim();
+      if(!d.title && !d.author){ $('#btTitle', root).focus(); return; }
+      if(d.end && d.status!=='done' && d.status!=='want') d.status = 'done';
+      if(coverChanged){ d.hasCover = !!cover; coverCache[d.id] = cover; saveKey('cover-'+d.id, cover); }
+      const i = state.books.findIndex(b => b.id===d.id);
+      if(i>=0) state.books[i] = d; else state.books.push(d);
+      if(d.status==='done' && d.end) readMonth = d.end.slice(0,7);
+      persistBooks(); closeModal(); renderReading();
+    });
+  });
 }
 
 /* ============================= INIT ============================= */
