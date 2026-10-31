@@ -396,6 +396,8 @@
   .bk-status{flex:none; font-size:11px; font-weight:700; border-radius:20px; padding:2px 9px; background:var(--read-dim); color:var(--read);}
   .bk-status.reading{background:var(--habit-dim); color:var(--habit);}
   .bk-status.want{background:var(--surface2); color:var(--text-faint);}
+  .rt-book{display:flex; align-items:center; gap:10px; padding:7px 0; border-top:1px dashed var(--border); cursor:pointer;}
+  .rt-cover{flex:none; width:30px; height:45px; border-radius:4px; background:var(--read-dim) center/cover;}
   .rd-empty{padding:26px 18px; text-align:center; color:var(--text-muted);}
   /* карточка книги в окне — как в бумажном трекере */
   .bt{background:#FDFCFA; border-radius:12px;}
@@ -2769,6 +2771,16 @@ function nextPeriodKey(mode, cursor){
   if(mode==='week'){ const d=parseISO(cursor); d.setDate(d.getDate()+7); return isoDate(d); }
   return shiftMonth(cursor,1);
 }
+function bookAvg(b){ const v=[b.plot,b.chars,b.atmo].filter(x=>x>0); return v.length ? v.reduce((a,c)=>a+c,0)/v.length : 0; }
+function readingStatsForRange(start, end){
+  const finished = (state.books||[]).filter(b => b.status==='done' && b.end && b.end>=start && b.end<=end)
+    .sort((a,b)=> String(a.end).localeCompare(String(b.end)));
+  const reading = (state.books||[]).filter(b => b.start && b.start<=end && (b.status==='reading' || (b.status==='done' && b.end && b.end>end)));
+  const rated = finished.filter(b => bookAvg(b)>0);
+  const avg = rated.length ? rated.reduce((a,b)=>a+bookAvg(b),0)/rated.length : null;
+  const best = rated.length>1 ? [...rated].sort((a,b)=>bookAvg(b)-bookAvg(a))[0] : null;
+  return { finished, reading, avg, best };
+}
 function retroTrendData(mode, cursor, n=6){
   const points = [];
   let c = cursor;
@@ -2777,7 +2789,8 @@ function retroTrendData(mode, cursor, n=6){
     const ts = tasksStatsForRange(start, end);
     const hs = habitsStatsForRange(start, end);
     const ss = sportStatsForRange(start, end);
-    points.unshift({ key:c, taskPct: ts.total?Math.round(ts.done/ts.total*100):0, habitPct: hs.avgPct, sportReps: ss.totalReps, hasTaskData: ts.total>0, hasHabitData: hs.results.length>0, hasSportData: ss.totalReps>0 });
+    const rs = readingStatsForRange(start, end);
+    points.unshift({ booksDone: rs.finished.length, hasBooksData: rs.finished.length>0, key:c, taskPct: ts.total?Math.round(ts.done/ts.total*100):0, habitPct: hs.avgPct, sportReps: ss.totalReps, hasTaskData: ts.total>0, hasHabitData: hs.results.length>0, hasSportData: ss.totalReps>0 });
     c = prevPeriodKey(mode, c);
   }
   return points;
@@ -2893,6 +2906,8 @@ function renderRetro(){
   const prevRange = periodRange(mode, prevKey);
   const prevSportStats = sportStatsForRange(prevRange.start, prevRange.end);
   const journalStats = journalStatsForRange(start, end);
+  const readStats = readingStatsForRange(start, end);
+  const prevReadStats = readingStatsForRange(prevRange.start, prevRange.end);
   const incomplete = incompleteTasksForRange(start, end);
   const trend = retroTrendData(mode, cursor, 6);
   const nextKey = nextPeriodKey(mode, cursor);
@@ -2922,6 +2937,7 @@ function renderRetro(){
       ${trendChartHTML(trend, 'taskPct', 'hasTaskData', getListColor('work'), 'Задачи, % выполнения по периодам', '%')}
       ${trendChartHTML(trend, 'habitPct', 'hasHabitData', 'var(--habit)', 'Привычки, средний % по периодам', '%')}
       ${trendChartHTML(trend, 'sportReps', 'hasSportData', 'var(--sport)', 'Спорт, повторений по периодам', '')}
+      ${trendChartHTML(trend, 'booksDone', 'hasBooksData', 'var(--read)', 'Чтение, прочитано книг по периодам', '')}
     </div>
 
     <div class="section-title"><h2>Задачи</h2></div>
@@ -2989,6 +3005,33 @@ function renderRetro(){
       })()}
       ${sportStats.bestSet ? `<div class="hint" style="margin-bottom:2px;">🏆 Лучший подход: <b style="color:var(--text);">${escapeHtml(sportStats.bestSet.exerciseName)} — ${sportStats.bestSet.reps} раз</b> (${fmtHuman(sportStats.bestSet.date)})</div>` : ''}
       ${sportStats.bestDay ? `<div class="hint">🔥 Лучший день: <b style="color:var(--text);">${sportStats.bestDay.total} повторений</b> (${fmtHuman(sportStats.bestDay.date)})</div>` : ''}
+    </div>
+
+    <div class="section-title"><h2>Чтение</h2></div>
+    <div class="card">
+      <div class="row-gap" style="justify-content:space-around; text-align:center; margin-bottom:10px;">
+        <div><div style="font-size:20px; font-weight:800; font-family:'Manrope'; color:var(--read);">${readStats.finished.length}</div><div class="hint" style="margin:0;">${pluralBooks(readStats.finished.length)} ${(readStats.finished.length%10===1 && readStats.finished.length%100!==11)?'прочитана':'прочитано'}</div></div>
+        <div><div style="font-size:20px; font-weight:800; font-family:'Manrope'; color:var(--habit);">${readStats.reading.length}</div><div class="hint" style="margin:0;">в процессе</div></div>
+        <div><div style="font-size:20px; font-weight:800; font-family:'Manrope'; color:var(--journal);">${readStats.avg!==null ? readStats.avg.toFixed(1)+'★' : '—'}</div><div class="hint" style="margin:0;">средняя оценка</div></div>
+      </div>
+      ${(()=>{
+        const diff = readStats.finished.length - prevReadStats.finished.length;
+        if(!readStats.finished.length && !prevReadStats.finished.length) return '';
+        const meta = diff>0 ? {a:'↑',c:'var(--habit)',w:'больше'} : diff<0 ? {a:'↓',c:'var(--danger)',w:'меньше'} : {a:'→',c:'var(--text-faint)',w:'столько же'};
+        return `<div class="hint" style="color:${meta.c}; font-weight:700; margin-bottom:8px;">${meta.a} ${diff ? Math.abs(diff)+' '+pluralBooks(Math.abs(diff))+' ' : ''}${meta.w}, чем в прошлый период (было ${prevReadStats.finished.length})</div>`;
+      })()}
+      ${readStats.finished.map(b => `
+        <div class="rt-book" data-rtbook="${b.id}">
+          <span class="rt-cover" data-rtcover="${b.id}"></span>
+          <div style="flex:1; min-width:0;">
+            <div style="font-weight:700; font-size:13.5px;">${escapeHtml(b.title||'Без названия')}</div>
+            <div class="hint" style="margin:0;">${escapeHtml(b.author||'')}${b.author?' · ':''}дочитала ${fmtHuman(b.end)}</div>
+          </div>
+          ${bookAvg(b) ? `<span style="color:var(--read); font-weight:800; font-size:13px; white-space:nowrap;">${bookAvg(b).toFixed(1)}★</span>` : ''}
+        </div>`).join('')}
+      ${readStats.best ? `<div class="hint" style="margin-top:8px;">🏆 Лучшая книга периода: <b style="color:var(--text);">${escapeHtml(readStats.best.title)}</b></div>` : ''}
+      ${readStats.reading.length ? `<div class="hint" style="margin-top:8px;">📖 Читаю: ${readStats.reading.map(b=>escapeHtml(b.title||'без названия')).join(', ')}</div>` : ''}
+      ${!readStats.finished.length && !readStats.reading.length ? `<div class="empty">За этот период книг нет</div>` : ''}
     </div>
 
     <div class="section-title"><h2>Дневник</h2></div>
@@ -3083,8 +3126,17 @@ function renderRetro(){
   $('#retroExport').addEventListener('click', ()=>{
     const text = $('#retroTa').value.trim();
     const highlight = $('#retroHighlight').value.trim();
-    const out = exportRetroText(mode, cursor, taskStats, habitStats, sportStats, journalStats, highlight, text, incomplete);
+    let out = exportRetroText(mode, cursor, taskStats, habitStats, sportStats, journalStats, highlight, text, incomplete);
+    if(readStats.finished.length || readStats.reading.length){
+      out += `\n\nЧТЕНИЕ\nПрочитано: ${readStats.finished.length}${readStats.avg!==null?` · средняя оценка ${readStats.avg.toFixed(1)}`:''}\n` + readStats.finished.map(b=>`• ${b.title}${b.author?' — '+b.author:''}${bookAvg(b)?` (${bookAvg(b).toFixed(1)}★)`:''}`).join('\n') + (readStats.reading.length?`\nЧитаю: ${readStats.reading.map(b=>b.title).join(', ')}`:'');
+    }
     downloadTextFile(`retro-${mode}-${cursor}.txt`, out);
+  });
+  $$('[data-rtbook]').forEach(el => el.addEventListener('click', ()=> openBookModal(el.dataset.rtbook)));
+  readStats.finished.filter(b=>b.hasCover).forEach(async b => {
+    const src = await loadCover(b.id);
+    const el = document.querySelector(`[data-rtcover="${b.id}"]`);
+    if(el && src) el.style.backgroundImage = `url('${src}')`;
   });
   $$('[data-retrojump]').forEach(el => el.addEventListener('click', ()=>{
     if(mode==='week') retroWeekCursor = el.dataset.retrojump; else retroMonthCursor = el.dataset.retrojump;
