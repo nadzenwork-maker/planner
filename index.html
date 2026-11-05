@@ -346,6 +346,10 @@
   .ncal-day.has-photo .ncal-it.ev{background:rgba(0,0,0,.55);color:#fff}
   .ncal-day.has-photo .ncal-more{color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.6)}
   .ncal-day.has-photo .ncal-n{text-shadow:0 1px 3px rgba(0,0,0,.6)}
+  .ncal-top{display:flex;align-items:center;gap:4px}
+  .ncal-sp{width:9px;height:9px;border-radius:50%;background:#1E7BFF;flex:none;box-shadow:0 0 0 1.5px rgba(255,255,255,.85)}
+  .ncal-sp.ex{background:transparent;border:2px solid #1E7BFF;box-shadow:none}
+  .ncal-day.has-photo .ncal-sp.ex{border-color:#fff}
   .ncal-star{position:absolute;top:6px;right:7px;font-size:11px;font-weight:700;color:var(--text-faint)}
   .ncal-day.has-photo .ncal-star{color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.6)}
   .ncal-photo{width:100%;max-height:220px;object-fit:cover;border-radius:12px;margin:4px 0 8px;cursor:pointer;display:block}
@@ -369,7 +373,7 @@
   .ncal-done{text-decoration:line-through;color:var(--text-faint)}
   .ncal-check{flex:none;width:22px;height:22px;border-radius:50%;border:2px solid var(--c);background:transparent;cursor:pointer;padding:0}
   .ncal-check.on{background:var(--c)}
-  @media (max-width:699px){.ncal{gap:4px}.ncal-day{min-height:54px;padding:4px}.ncal-it,.ncal-more{display:none}.ncal-dots{display:flex}.ncal-row time{min-width:84px}}
+  @media (max-width:699px){.ncal{gap:4px}.ncal-day{min-height:54px;padding:4px}.ncal-it,.ncal-more{display:none}.ncal-dots{display:flex}.ncal-row time{min-width:84px}.ncal-star{display:none}.ncal-n{width:20px;height:20px;font-size:13px}}
 
   /* ---- чтение ---- */
   :root{ --read:#8E7AA8; --read-dim:#EFEAF5; --read-label:#B0858F; }
@@ -715,7 +719,7 @@ const state = {
   exercises: [], sportLogs: {}, workouts: [], measurements: [],
   journal: [],
   goalsMonthly: [], goalsWeekly: [],
-  otherColor: '#5C6BAA',
+  otherColor: '#FF8A1F',
   retros: [],
   books: []
 };
@@ -1577,17 +1581,19 @@ async function renderCalendar(){
         ${days.map(iso => {
           const d = parseISO(iso), ev = evs[iso]||[], ts = dayTasks(iso);
           const dj = state.journal.find(j=>j.date===iso);
+          const sp = state.workouts.some(w=>w.date===iso) ? 'w' : (state.sportLogs[iso] && Object.values(state.sportLogs[iso]).some(a=>a&&a.length)) ? 'e' : '';
           const items = [
             ...ev.map(e=>`<span class="ncal-it ev">${e.allDay?'':e.start+' '}${escapeHtml(e.title)}</span>`),
             ...ts.map(x=>`<span class="ncal-it ${x.done?'done':''}" style="--c:${ncatColor(ncatOf(x))}">${escapeHtml(x.text||'')}</span>`)
           ];
           return `<button class="ncal-day ${d.getMonth()!==m-1?'out':''} ${iso===t?'today':''} ${iso===sel?'sel':''} ${dj&&dj.photo?'has-photo':''}" data-nday="${iso}">
-            <span class="ncal-n">${d.getDate()}</span>${dj&&dj.rating?`<span class="ncal-star">★${dj.rating}</span>`:''}
+            <span class="ncal-top"><span class="ncal-n">${d.getDate()}</span>${sp==='w'?'<i class="ncal-sp" title="Тренировка"></i>':sp==='e'?'<i class="ncal-sp ex" title="Упражнения"></i>':''}</span>${dj&&dj.rating?`<span class="ncal-star">★${dj.rating}</span>`:''}
             ${items.slice(0,3).join('')}${items.length>3?`<span class="ncal-more">+${items.length-3}</span>`:''}
             <span class="ncal-dots">${ev.slice(0,2).map(()=>'<i class="ev"></i>').join('')}${ts.slice(0,3).map(x=>`<i style="background:${ncatColor(ncatOf(x))}"></i>`).join('')}</span>
           </button>`;
         }).join('')}
       </div>
+      <div class="hint" style="display:flex;gap:14px;align-items:center;margin:-6px 0 12px;font-size:12px"><span style="display:flex;align-items:center;gap:5px"><i class="ncal-sp" style="box-shadow:none"></i>тренировка</span><span style="display:flex;align-items:center;gap:5px"><i class="ncal-sp ex"></i>упражнения</span></div>
       <div class="card ncal-panel">
         <div class="ncal-panel-head">
           <h2>${WD[dd.getDay()]}, ${fmtHuman(sel)}</h2>
