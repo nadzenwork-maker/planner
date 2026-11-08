@@ -965,7 +965,7 @@ function toggleTaskDone(tsk){
       done: false,
       date: s.date ? isoDate(new Date(parseISO(s.date).getTime()+deltaMs)) : null
     }));
-    clone.carryCount = 0;
+    clone.carryCount = 0; clone.carryDates = [];
     clone.order = newTaskOrder();
     state.tasks.push(clone);
   }
@@ -1076,8 +1076,11 @@ function renderDay(){
   let moved = false;
   state.tasks.forEach(x => {
     if(x.date && x.date < t && !x.done){
+      // запоминаем каждый день, когда задача была запланирована и не сделана
+      const missed = []; for(let d = x.date; d < t && missed.length < 60; d = addDaysISO(d,1)) missed.push(d);
+      x.carryDates = (x.carryDates||[]).concat(missed);
+      x.carryCount = (x.carryCount||0) + missed.length;
       x.date = t;
-      x.carryCount = (x.carryCount||0) + 1;
       moved = true;
     }
     (x.subtasks||[]).forEach(s => {
@@ -2886,9 +2889,26 @@ function photoGalleryHTML(photos){
     ${photos.map(p => `<img src="${p.photo}" data-photolightbox="${p.photo}" style="width:64px; height:64px; object-fit:cover; border-radius:10px; flex:0 0 auto; cursor:pointer;">`).join('')}
   </div>`;
 }
-function incompleteTasksForRange(start,end){
-  return state.tasks.filter(t=>t.date && t.date>=start && t.date<=end && !t.done && (t.carryCount||0)>=3);
+function addDaysISO(iso,n){ const d=parseISO(iso); d.setDate(d.getDate()+n); return isoDate(d); }
+// переносы за период: сколько раз задачи не сделаны в запланированный день
+function carriesForRange(start,end){
+  const rows = state.tasks.map(t => {
+    const log = t.carryDates||[];
+    let n = log.filter(d=>d>=start && d<=end).length;
+    const legacy = Math.max(0, (t.carryCount||0) - log.length); // старые переносы без дат — относим к текущей дате задачи
+    if(legacy && t.date && t.date>=start && t.date<=end) n += legacy;
+    return n ? { t, n } : null;
+  }).filter(Boolean).sort((a,b)=> (a.t.done?1:0)-(b.t.done?1:0) || b.n-a.n);
+  const inRange = state.tasks.filter(t=>t.date && t.date>=start && t.date<=end);
+  const onTime = inRange.filter(t=>t.done && !(t.carryCount||0)).length;
+  return {
+    rows, total: rows.reduce((a,r)=>a+r.n,0),
+    doneAfter: rows.filter(r=>r.t.done).length, open: rows.filter(r=>!r.t.done).length,
+    onTime, planned: inRange.length, onTimePct: inRange.length ? Math.round(onTime/inRange.length*100) : 0
+  };
 }
+function plRaz(n){ return n%10===1&&n%100!==11 ? 'раз' : (n%10>=2&&n%10<=4&&(n%100<10||n%100>=20)) ? 'раза' : 'раз'; }
+function plPerenos(n){ return n%10===1&&n%100!==11 ? 'перенос' : (n%10>=2&&n%10<=4&&(n%100<10||n%100>=20)) ? 'переноса' : 'переносов'; }
 function exportRetroText(mode, cursor, taskStats, habitStats, sportStats, journalStats, highlight, text, incomplete){
   let out = `Ретро — ${retroPeriodLabel(mode,cursor)}\n\n`;
   if(highlight) out += `Главное событие: ${highlight}\n\n`;
@@ -2898,9 +2918,12 @@ function exportRetroText(mode, cursor, taskStats, habitStats, sportStats, journa
   habitStats.results.forEach(r => { out += `  ${r.habit.name}: ${r.done}/${r.elapsed} (${r.pct}%)\n`; });
   out += `\nСпорт: ${sportStats.totalReps} повторений, ${sportStats.workoutsCount} тренировок, ${sportStats.measurementsCount} замеров\n`;
   if(journalStats.avg!==null) out += `\nДневник: средняя оценка ${journalStats.avg.toFixed(1)}★ (записей: ${journalStats.entries.length})\n`;
-  if(incomplete.length){
-    out += `\nНезакрытые задачи (${incomplete.length}):\n`;
-    incomplete.forEach(t => { out += `  - ${t.text}${t.date?' ('+fmtHuman(t.date)+')':''}\n`; });
+  if(incomplete && incomplete.planned){
+    out += `\nСделано в запланированный день: ${incomplete.onTime}/${incomplete.planned} (${incomplete.onTimePct}%)\n`;
+  }
+  if(incomplete && incomplete.rows.length){
+    out += `Переносы: ${incomplete.total} (задач: ${incomplete.rows.length}, закрыто после переноса: ${incomplete.doneAfter}, висит: ${incomplete.open})\n`;
+    incomplete.rows.forEach(r => { out += `  - ${r.t.text} — ${r.n} ${plRaz(r.n)}${r.t.done?' ✓':' (не сделано)'}\n`; });
   }
   if(text) out += `\nРефлексия:\n${text}\n`;
   return out;
@@ -2930,7 +2953,8 @@ function renderRetro(){
   const journalStats = journalStatsForRange(start, end);
   const readStats = readingStatsForRange(start, end);
   const prevReadStats = readingStatsForRange(prevRange.start, prevRange.end);
-  const incomplete = incompleteTasksForRange(start, end);
+  const carries = carriesForRange(start, end);
+  const incomplete = carries;
   const trend = retroTrendData(mode, cursor, 6);
   const nextKey = nextPeriodKey(mode, cursor);
   const nextGoals = mode==='week'
@@ -2981,20 +3005,28 @@ function renderRetro(){
       `).join('')}
     </div>
 
-    ${incomplete.length ? `
-      <div class="section-title"><h2>Незакрытое</h2><span class="count">${incomplete.length}</span></div>
-      <p class="hint" style="margin-top:-6px; margin-bottom:8px;">Задачи, которые переносятся изо дня в день 3 и более раз</p>
-      <div class="card" style="padding:6px 14px;">
-        ${incomplete.map(t => `
-          <div class="minirow" data-incompopen="${t.id}" style="cursor:pointer;">
-            <div>
-              <div class="l" style="font-weight:600; font-size:13px;"><span class="accent-dot" style="background:${getListColor(t.list)}"></span>${escapeHtml(t.text)}</div>
-              <div class="r">перенесена ${t.carryCount} ${t.carryCount<5?'раза':'раз'} · сейчас на ${t.date?fmtHuman(t.date):''}</div>
+    <div class="section-title"><h2>Переносы</h2>${carries.rows.length?`<span class="count">${carries.total}</span>`:''}</div>
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;">
+        <span style="font-weight:800; font-size:22px; font-family:'Manrope';">${carries.onTimePct}%</span>
+        <span class="hint" style="margin:0;">сделано в запланированный день · ${carries.onTime}/${carries.planned}</span>
+      </div>
+      <div style="height:6px; border-radius:4px; background:var(--surface2); overflow:hidden; margin-bottom:12px;">
+        <div style="height:100%; width:${carries.onTimePct}%; background:var(--habit);"></div>
+      </div>
+      ${carries.rows.length ? `
+        <div style="font-size:13px; margin-bottom:6px;"><b>${carries.total} ${plPerenos(carries.total)}</b> · задач переносилось: ${carries.rows.length} · закрыто потом: ${carries.doneAfter} · висит: <b style="color:${carries.open?'var(--danger)':'inherit'}">${carries.open}</b></div>
+        ${carries.rows.map(r => `
+          <div class="minirow" data-incompopen="${r.t.id}" style="cursor:pointer;">
+            <div style="flex:1; min-width:0;">
+              <div class="l" style="font-weight:600; font-size:13px; ${r.t.done?'text-decoration:line-through; color:var(--text-faint);':''}"><span class="accent-dot" style="background:${ncatColor(ncatOf(r.t))}"></span>${escapeHtml(r.t.text)}</div>
+              <div class="r">${r.t.done?'сделана после переносов':'не сделана · сейчас на '+(r.t.date?fmtHuman(r.t.date):'без срока')}</div>
             </div>
+            <span style="font-weight:700; font-size:13px; color:${r.n>=3?'var(--danger)':'var(--text-muted)'}; white-space:nowrap;">×${r.n}</span>
           </div>
         `).join('')}
-      </div>
-    ` : ''}
+      ` : '<div class="hint" style="margin:0;">Переносов не было 👏</div>'}
+    </div>
 
     <div class="section-title"><h2>Привычки</h2></div>
     <div class="card">
