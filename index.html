@@ -147,6 +147,11 @@
   /* ---- блог ---- */
   :root{ --blog:#D2553F; --blog-dim:#FBE9E5; }
   #tab-blog .pill.active{background:var(--blog); border-color:var(--blog); color:#fff}
+  .card-prev{position:relative; border-radius:14px; overflow:hidden; background:var(--surface2); aspect-ratio:1080/1350; margin-bottom:12px}
+  .card-prev img{width:100%; height:100%; display:block}
+  .card-load{position:absolute; inset:0; display:grid; place-items:center; background:var(--surface2)}
+  .card-opts{display:flex; flex-wrap:wrap; gap:6px}
+  .card-opts .pill.active{background:#D41F2A; border-color:#D41F2A; color:#fff}
   #tab-blog .quickadd button{background:var(--blog); color:#fff}
   .bl-prog{height:6px; border-radius:4px; background:var(--surface2); overflow:hidden; margin-bottom:10px}
   .bl-prog div{height:100%; background:var(--blog); transition:width .2s}
@@ -3031,6 +3036,7 @@ function renderRetro(){
       <button class="cal-nav" id="retroNext">${icon('chevRight')}</button>
     </div>
 
+    <button class="btn" id="retroCard" style="width:100%; margin:4px 0 2px; display:flex; align-items:center; justify-content:center; gap:8px; background:#D41F2A; color:#fff; border:none;">📸 Карточка для блога</button>
     <div class="section-title" style="margin-top:14px;"><h2>Главное событие</h2></div>
     <div class="field" style="margin-bottom:4px;">
       <input type="text" id="retroHighlight" value="${escapeHtml(existing?existing.highlight||'':'')}" placeholder="Одна строка о том, что запомнилось больше всего">
@@ -3188,6 +3194,7 @@ function renderRetro(){
   $('#tab-retro').innerHTML = html;
 
   $$('[data-retromode]').forEach(b => b.addEventListener('click', ()=>{ retroMode = b.dataset.retromode; renderRetro(); }));
+  $('#retroCard').addEventListener('click', ()=> openBlogCard(mode, cursor, $('#retroHighlight').value.trim()));
   $('#retroPrev').addEventListener('click', ()=>{ if(mode==='week') retroWeekCursor=prevPeriodKey('week',retroWeekCursor); else retroMonthCursor=prevPeriodKey('month',retroMonthCursor); renderRetro(); });
   $('#retroNext').addEventListener('click', ()=>{ if(mode==='week') retroWeekCursor=nextPeriodKey('week',retroWeekCursor); else retroMonthCursor=nextPeriodKey('month',retroMonthCursor); renderRetro(); });
 
@@ -3704,6 +3711,178 @@ function openMoreMenu(){
   const items = TABS.filter(t => !NAV_MAIN.includes(t.id));
   openModal(`<div class="modal-title">Разделы</div><div class="more-grid">${items.map(t=>`<button class="more-item ${activeTab===t.id?'active':''}" data-moretab="${t.id}">${icon(t.icon)}<span>${t.label}</span></button>`).join('')}</div>`, root => {
     $$('[data-moretab]').forEach(b => b.addEventListener('click', ()=>{ closeModal(); switchTab(b.dataset.moretab); }));
+  });
+}
+
+/* ============================= КАРТОЧКА ДЛЯ БЛОГА (ретро → картинка) ============================= */
+const CARD_FONT_BASE = 'https://cdn.jsdelivr.net/npm/@fontsource/';
+let cardFontsReady = null;
+function loadCardFonts(){
+  if(cardFontsReady) return cardFontsReady;
+  const LAT = 'U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD';
+  const CYR = 'U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116';
+  const list = [];
+  [['CardUnb','unbounded',[400,800]],['CardMan','manrope',[600,700,800]]].forEach(([fam,pkg,ws]) => ws.forEach(w => [['latin',LAT],['cyrillic',CYR]].forEach(([sub,range]) => {
+    list.push(new FontFace(fam, `url(${CARD_FONT_BASE}${pkg}@5.2.8/files/${pkg}-${sub}-${w}-normal.woff2)`, { weight:String(w), unicodeRange:range }));
+  })));
+  cardFontsReady = Promise.all(list.map(f => f.load().then(ff => document.fonts.add(ff)).catch(()=>null)));
+  return cardFontsReady;
+}
+const CARD = { W:1080, H:1350, P:64, bg:'#F6F1EE', text:'#1C1416', muted:'#9A8E8C', tile:'#FFFFFF', track:'#F1E6E4', red:'#D41F2A', green:'#23A065', yellow:'#D49A1A', dark:'#1C1416', light:'#F6F1EE' };
+const cardColor = p => p>=80 ? CARD.green : p>=50 ? CARD.yellow : CARD.red;
+function cardRR(ctx,x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+function cardSpaced(ctx, s, x, y, sp){ for(const ch of s){ ctx.fillText(ch, x, y); x += ctx.measureText(ch).width + sp; } return x; }
+function cardWrap(ctx, s, maxW, maxLines){
+  const words = String(s||'').split(/\s+/).filter(Boolean); const lines = []; let cur = '';
+  words.forEach(w => { const t = cur ? cur+' '+w : w; if(ctx.measureText(t).width > maxW && cur){ lines.push(cur); cur = w; } else cur = t; });
+  if(cur) lines.push(cur);
+  if(lines.length > maxLines){ const l = lines.slice(0,maxLines); let last = l[maxLines-1]; while(ctx.measureText(last+'…').width > maxW && last.length) last = last.slice(0,-1); l[maxLines-1] = last.trim()+'…'; return l; }
+  return lines;
+}
+const cardNoEmoji = s => String(s||'').replace(/[\p{Extended_Pictographic}‍️]/gu,'').replace(/\s+/g,' ').trim();
+function cardLoadImg(src){ return new Promise(res => { const i = new Image(); i.onload = ()=>res(i); i.onerror = ()=>res(null); i.src = src; }); }
+function isoWeekNum(iso){ const d = parseISO(iso); d.setHours(0,0,0,0); d.setDate(d.getDate()+3-((d.getDay()+6)%7)); const w1 = new Date(d.getFullYear(),0,4); return 1+Math.round(((d-w1)/864e5-3+((w1.getDay()+6)%7))/7); }
+
+function cardData(mode, cursor, highlight){
+  const { start, end } = periodRange(mode, cursor);
+  const t = todayISO(), endC = end < t ? end : t;
+  const ts = tasksStatsForRange(start, end), cr = carriesForRange(start, end);
+  const hs = habitsStatsForRange(start, endC);
+  const days = Math.round((parseISO(end)-parseISO(start))/864e5)+1, weeks = Math.max(1, Math.round(days/7));
+  const wo = state.workouts.filter(w=>w.date>=start && w.date<=end);
+  const blogWeeks = mode==='week' ? [cursor] : blogWeeksOfMonth(cursor);
+  const pubs = blogWeeks.reduce((a,k)=> a + (state.blog.weeks[k] ? blogPubCount(blogWeek(k)) : 0), 0);
+  const js = journalStatsForRange(start, end);
+  const done = (state.books||[]).filter(b=>b.status==='done' && b.end && b.end>=start && b.end<=end).sort((a,b)=>String(b.end).localeCompare(String(a.end)));
+  const reading = (state.books||[]).filter(b=>b.status==='reading');
+  const [s1,e1] = [parseISO(start), parseISO(end)];
+  const period = mode==='week'
+    ? (s1.getMonth()===e1.getMonth() ? [`${s1.getDate()}–${e1.getDate()} `, MONTHS[e1.getMonth()]] : [`${s1.getDate()} ${MONTHS[s1.getMonth()].slice(0,3)} – ${e1.getDate()} `, MONTHS[e1.getMonth()].slice(0,3)])
+    : ['', `${MONTHS_NOM[s1.getMonth()].toLowerCase()} ${s1.getFullYear()}`];
+  return {
+    mode, period, highlight: highlight||'',
+    label: mode==='week' ? 'ИТОГИ НЕДЕЛИ' : 'ИТОГИ МЕСЯЦА',
+    tag: mode==='week' ? `неделя ${isoWeekNum(start)}` : `${days} дней`,
+    avg: js.avg!==null ? js.avg.toFixed(1).replace('.',',') : null,
+    tasks: { done: ts.done, total: ts.total, pct: ts.total ? Math.round(ts.done/ts.total*100) : 0, ontime: cr.onTimePct },
+    habits: { pct: hs.avgPct, names: hs.results.map(r=>cardNoEmoji(r.habit.name).toLowerCase()).filter(Boolean).slice(0,3).join(' · '), n: hs.results.length },
+    sport: { w: wo.length, goal: 3*weeks, min: wo.reduce((a,w)=>a+(+w.duration||0),0), pct: Math.min(100, Math.round(wo.length/(3*weeks)*100)) },
+    blog: { n: pubs, of: 8*blogWeeks.length, pct: Math.round(pubs/(8*blogWeeks.length)*100) },
+    book: done.length ? { lbl: done.length>1 ? `ДОЧИТАЛА · ${done.length}` : 'ДОЧИТАЛА', t: done[0].title||'Без названия', a: done[0].author||'' } : reading.length ? { lbl:'ЧИТАЮ', t: reading[0].title||'Без названия', a: reading[0].author||'' } : null,
+    photos: js.photos.map(e=>e.photo).slice(-4),
+  };
+}
+
+async function drawBlogCard(d, opt){
+  await loadCardFonts();
+  const C = CARD, W = C.W, P = C.P, cw = W - 2*P, gap = 18;
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = C.H;
+  const ctx = cv.getContext('2d');
+  ctx.fillStyle = C.bg; ctx.fillRect(0,0,W,C.H);
+  ctx.textBaseline = 'alphabetic';
+  // шапка
+  ctx.fillStyle = C.muted; ctx.font = '800 22px CardMan'; cardSpaced(ctx, d.label, P, 92, 4.8);
+  ctx.font = `800 ${d.mode==='week'?84:72}px CardUnb`;
+  let x = P; ctx.fillStyle = C.text; ctx.fillText(d.period[0], x, 190); x += ctx.measureText(d.period[0]).width;
+  ctx.fillStyle = C.red; ctx.fillText(d.period[1], x, 190);
+  if(opt.avg && d.avg){
+    ctx.font = '800 26px CardUnb'; const s = `★ ${d.avg}`, bw = ctx.measureText(s).width + 48;
+    ctx.fillStyle = C.red; cardRR(ctx, W-P-bw, 140, bw, 60, 30); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.fillText(s, W-P-bw+24, 180);
+  }
+  let y = 234;
+  { // если фото нет — центрируем блок плиток между шапкой и подвалом
+    const willPhotos = opt.photos && d.photos.length;
+    if(!willPhotos){
+      let h = 0, rows = 0;
+      if(opt.highlight && d.highlight){ ctx.font = '800 40px CardMan'; h += 104 + cardWrap(ctx, d.highlight, cw-72, 2).length*49; rows++; }
+      if(opt.tasks || opt.habits){ h += 264; rows++; }
+      if(opt.sport || opt.blog || (opt.book && d.book)){ h += 252; rows++; }
+      h += Math.max(0, rows-1)*gap;
+      y += Math.max(0, Math.round((1278 - 70 - 234 - h)/2));
+    }
+  }
+  const tile = (tx,ty,tw,th,bg) => { ctx.fillStyle = bg||C.tile; cardRR(ctx,tx,ty,tw,th,32); ctx.fill(); };
+  const lbl = (s,tx,ty,color,dotPct) => { ctx.font = '800 19px CardMan'; ctx.fillStyle = color||C.muted; const ex = cardSpaced(ctx, s, tx, ty, 2.7); if(dotPct!==undefined){ ctx.fillStyle = cardColor(dotPct); ctx.beginPath(); ctx.arc(ex+12, ty-7, 7, 0, Math.PI*2); ctx.fill(); } };
+  const big = (n, of, tx, ty, size) => { ctx.font = `800 ${size}px CardUnb`; ctx.fillStyle = C.text; ctx.fillText(n, tx, ty); const nx = tx + ctx.measureText(n).width + 2; if(of){ ctx.font = `400 ${Math.round(size*0.43)}px CardUnb`; ctx.fillStyle = C.muted; ctx.fillText(of, nx, ty); } };
+  const bar = (pct, tx, ty, tw) => { ctx.fillStyle = C.track; cardRR(ctx,tx,ty,tw,12,6); ctx.fill(); if(pct>0){ ctx.fillStyle = cardColor(pct); cardRR(ctx,tx,ty,Math.max(12,tw*Math.min(100,pct)/100),12,6); ctx.fill(); } };
+  const sub = (s, tx, ty, color) => { ctx.font = '600 22px CardMan'; ctx.fillStyle = color||C.muted; ctx.fillText(s, tx, ty); };
+  // главное
+  if(opt.highlight && d.highlight){
+    ctx.font = '800 40px CardMan'; const lines = cardWrap(ctx, d.highlight, cw-72, 2);
+    const th = 104 + lines.length*49;
+    const g = ctx.createLinearGradient(P, y, P+cw, y+th); g.addColorStop(0,'#A80F1C'); g.addColorStop(.6,'#D41F2A'); g.addColorStop(1,'#E8333A');
+    tile(P,y,cw,th,g);
+    ctx.font = '800 19px CardMan'; ctx.fillStyle = 'rgba(255,255,255,.72)'; cardSpaced(ctx, d.mode==='week'?'ГЛАВНОЕ ЗА НЕДЕЛЮ':'ГЛАВНОЕ ЗА МЕСЯЦ', P+36, y+52, 2.7);
+    ctx.font = '800 40px CardMan'; ctx.fillStyle = '#fff'; lines.forEach((l,i)=> ctx.fillText(l, P+36, y+108+i*49));
+    y += th + gap;
+  }
+  // задачи + привычки
+  const row2 = [];
+  if(opt.tasks) row2.push(tx => { const tw = row2w; lbl('ЗАДАЧИ', tx+30, y+50, null, d.tasks.pct); big(String(d.tasks.done), '/'+d.tasks.total, tx+30, y+150, 84);
+    ctx.font = '600 22px CardMan'; ctx.fillStyle = C.muted; ctx.fillText('в срок ', tx+30, y+194); const ox = tx+30+ctx.measureText('в срок ').width; ctx.font = '800 22px CardMan'; ctx.fillStyle = cardColor(d.tasks.ontime); ctx.fillText(d.tasks.ontime+'%', ox, y+194);
+    bar(d.tasks.pct, tx+30, y+224, tw-60); });
+  if(opt.habits) row2.push(tx => { const tw = row2w; lbl('ПРИВЫЧКИ', tx+30, y+50, null, d.habits.pct); big(String(d.habits.pct), '%', tx+30, y+150, 84);
+    ctx.font = '600 22px CardMan'; sub(cardWrap(ctx, d.habits.names || `${d.habits.n} привычки`, tw-60, 1)[0]||'', tx+30, y+194); bar(d.habits.pct, tx+30, y+224, tw-60); });
+  let row2w = 0;
+  if(row2.length){ row2w = (cw - gap*(row2.length-1))/row2.length; row2.forEach((f,i)=>{ const tx = P + i*(row2w+gap); tile(tx,y,row2w,264); f(tx); }); y += 264 + gap; }
+  // спорт, блог, книга
+  const row3 = [];
+  if(opt.sport) row3.push((tx,tw) => { tile(tx,y,tw,252); lbl('СПОРТ', tx+30, y+50, null, d.sport.pct); big(String(d.sport.w), '/'+d.sport.goal, tx+30, y+140, 72); sub(d.sport.min ? `${d.sport.min} минут` : 'тренировок', tx+30, y+184); bar(d.sport.pct, tx+30, y+212, tw-60); });
+  if(opt.blog) row3.push((tx,tw) => { tile(tx,y,tw,252); lbl('БЛОГ', tx+30, y+50, null, d.blog.pct); big(String(d.blog.n), '/'+d.blog.of, tx+30, y+140, 72); sub('публикаций', tx+30, y+184); bar(d.blog.pct, tx+30, y+212, tw-60); });
+  if(opt.book && d.book) row3.push((tx,tw) => { tile(tx,y,tw,252,C.dark); lbl(d.book.lbl, tx+30, y+50, 'rgba(246,241,238,.6)');
+    ctx.font = '800 30px CardMan'; ctx.fillStyle = C.light; const ls = cardWrap(ctx, d.book.t, tw-60, 3); ls.forEach((l,i)=>ctx.fillText(l, tx+30, y+100+i*35));
+    if(d.book.a){ ctx.font = '600 21px CardMan'; ctx.fillStyle = 'rgba(246,241,238,.7)'; ctx.fillText(cardWrap(ctx, d.book.a, tw-60, 1)[0], tx+30, y+100+ls.length*35+12); } });
+  if(row3.length){ const tw = (cw - gap*(row3.length-1))/row3.length; row3.forEach((f,i)=> f(P + i*(tw+gap), tw)); y += 252 + gap; }
+  // фото
+  const footY = 1278;
+  if(opt.photos && d.photos.length){
+    const imgs = (await Promise.all(d.photos.map(cardLoadImg))).filter(Boolean);
+    const ph = Math.min(footY - 70 - y, imgs.length<=2 ? 330 : 250);
+    if(imgs.length && ph > 120){
+      const pw = (cw - 14*(imgs.length-1))/imgs.length;
+      imgs.forEach((im,i) => { const px = P + i*(pw+14); ctx.save(); cardRR(ctx,px,y,pw,ph,26); ctx.clip();
+        const s = Math.max(pw/im.width, ph/im.height), iw = im.width*s, ih = im.height*s; ctx.drawImage(im, px+(pw-iw)/2, y+(ph-ih)/2, iw, ih); ctx.restore(); });
+    }
+  }
+  // подвал
+  ctx.font = '800 24px CardUnb'; ctx.fillStyle = C.text; const bx = P; ctx.fillText('а надя будет мясо', bx, footY); ctx.fillStyle = C.red; ctx.fillText('?', bx + ctx.measureText('а надя будет мясо').width, footY);
+  ctx.font = '700 22px CardMan'; ctx.fillStyle = C.muted; ctx.textAlign = 'right'; ctx.fillText(d.tag, W-P, footY); ctx.textAlign = 'left';
+  return cv;
+}
+
+let blogCardOpt = { highlight:true, avg:true, tasks:true, habits:true, sport:true, blog:true, book:true, photos:true };
+try{ const s = JSON.parse(localStorage.getItem('planner-cardopt')||'null'); if(s) blogCardOpt = Object.assign(blogCardOpt, s); }catch(e){}
+function openBlogCard(mode, cursor, highlight){
+  const d = cardData(mode, cursor, highlight);
+  const items = [['highlight','Главное'],['avg','Оценка ★'],['tasks','Задачи'],['habits','Привычки'],['sport','Спорт'],['blog','Блог'],['book','Книга'],['photos','Фото дня']];
+  openModal(`
+    <div class="modal-title">Карточка для блога</div>
+    <div class="card-prev"><div class="card-load"><div class="spinner"></div></div><img id="cardImg" alt="Карточка"></div>
+    <div class="card-opts">${items.map(([k,l])=>`<button class="pill ${blogCardOpt[k]?'active':''}" data-cardopt="${k}">${l}</button>`).join('')}</div>
+    ${!d.highlight ? '<div class="hint" style="margin:8px 0 0">Главное событие пустое — впиши его в ретро, и оно появится на карточке.</div>' : ''}
+    <div class="modal-actions"><button class="btn" id="cardSave">Сохранить</button>${navigator.share ? '<button class="btn btn-primary" id="cardShare" style="background:#D41F2A;color:#fff">Поделиться</button>' : ''}</div>`, async root => {
+    let blob = null;
+    const fname = `itogi-${mode==='week'?'nedeli':'mesyaca'}-${cursor}.png`;
+    const redraw = async () => {
+      $('.card-load', root).style.display = '';
+      const cv = await drawBlogCard(d, blogCardOpt);
+      blob = await new Promise(r => cv.toBlob(r, 'image/png'));
+      const img = $('#cardImg', root); if(img.src) URL.revokeObjectURL(img.src); img.src = URL.createObjectURL(blob);
+      $('.card-load', root).style.display = 'none';
+    };
+    $$('[data-cardopt]', root).forEach(b => b.addEventListener('click', ()=>{
+      const k = b.dataset.cardopt; blogCardOpt[k] = !blogCardOpt[k]; b.classList.toggle('active', blogCardOpt[k]);
+      try{ localStorage.setItem('planner-cardopt', JSON.stringify(blogCardOpt)); }catch(e){}
+      redraw();
+    }));
+    $('#cardSave', root).addEventListener('click', ()=>{ if(!blob) return; const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = fname; document.body.appendChild(a); a.click(); a.remove(); });
+    const sh = $('#cardShare', root);
+    if(sh) sh.addEventListener('click', async ()=>{
+      if(!blob) return; const file = new File([blob], fname, { type:'image/png' });
+      try{ if(navigator.canShare && navigator.canShare({ files:[file] })) await navigator.share({ files:[file] }); else $('#cardSave', root).click(); }catch(e){}
+    });
+    redraw();
   });
 }
 
