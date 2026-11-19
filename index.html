@@ -3776,7 +3776,7 @@ function cardData(mode, cursor, highlight){
     tag: mode==='week' ? `неделя ${isoWeekNum(start)}` : `${days} дней`,
     avg: js.avg!==null ? js.avg.toFixed(1).replace('.',',') : null,
     tasks: { done: ts.done, total: ts.total, pct: ts.total ? Math.round(ts.done/ts.total*100) : 0, ontime: cr.onTimePct },
-    habits: { pct: hs.avgPct, names: hs.results.map(r=>cardNoEmoji(r.habit.name).toLowerCase()).filter(Boolean).slice(0,3).join(' · '), n: hs.results.length },
+    habits: { pct: hs.avgPct, n: hs.results.length },
     sport: { w: wo.length, goal: 3*weeks, min: wo.reduce((a,w)=>a+(+w.duration||0),0), pct: Math.min(100, Math.round(wo.length/(3*weeks)*100)) },
     blog: { n: pubs, of: 8*blogWeeks.length, pct: Math.round(pubs/(8*blogWeeks.length)*100) },
     book: done.length ? { lbl: done.length>1 ? `ДОЧИТАЛА · ${done.length}` : 'ДОЧИТАЛА', t: done[0].title||'Без названия', a: done[0].author||'' } : reading.length ? { lbl:'ЧИТАЮ', t: reading[0].title||'Без названия', a: reading[0].author||'' } : null,
@@ -3808,8 +3808,8 @@ async function drawBlogCard(d, opt){
     if(!willPhotos){
       let h = 0, rows = 0;
       if(opt.highlight && d.highlight){ ctx.font = '800 40px CardMan'; h += 104 + cardWrap(ctx, d.highlight, cw-72, 2).length*49; rows++; }
-      if(opt.tasks || opt.sport){ h += 264; rows++; }
-      if(opt.blog || (opt.book && d.book)){ h += 252; rows++; }
+      if(opt.tasks || opt.habits){ h += 264; rows++; }
+      if(opt.sport || opt.blog || (opt.book && d.book)){ h += 252; rows++; }
       h += Math.max(0, rows-1)*gap;
       y += Math.max(0, Math.round((1278 - 70 - 234 - h)/2));
     }
@@ -3829,7 +3829,7 @@ async function drawBlogCard(d, opt){
     ctx.font = '800 40px CardMan'; ctx.fillStyle = '#fff'; lines.forEach((l,i)=> ctx.fillText(l, P+36, y+108+i*49));
     y += th + gap;
   }
-  // ряд 1: задачи + спорт, ряд 2: блог + книга
+  // ряд 1: задачи + привычки, ряд 2: спорт + блог + книга
   const metric = (tx, tw, th, name, pct, n, of, line, extra) => {
     tile(tx,y,tw,th); lbl(name, tx+30, y+50, null, pct);
     const sz = th>=260 ? 84 : 72; big(String(n), of, tx+30, y+(th>=260?150:140), sz);
@@ -3840,9 +3840,10 @@ async function drawBlogCard(d, opt){
   if(opt.tasks) row2.push((tx,tw) => metric(tx, tw, 264, 'ЗАДАЧИ', d.tasks.pct, d.tasks.done, '/'+d.tasks.total, '', (ex,ey) => {
     ctx.font = '600 22px CardMan'; ctx.fillStyle = C.muted; ctx.fillText('в срок ', ex+30, ey); const ox = ex+30+ctx.measureText('в срок ').width;
     ctx.font = '800 22px CardMan'; ctx.fillStyle = cardColor(d.tasks.ontime); ctx.fillText(d.tasks.ontime+'%', ox, ey); }));
-  if(opt.sport) row2.push((tx,tw) => metric(tx, tw, 264, 'СПОРТ', d.sport.pct, d.sport.w, '/'+d.sport.goal, d.sport.min ? `${d.sport.min} минут` : 'тренировок'));
+  if(opt.habits) row2.push((tx,tw) => metric(tx, tw, 264, 'ПРИВЫЧКИ', d.habits.pct, d.habits.pct, '%', d.mode==='week' ? 'в среднем за неделю' : 'в среднем за месяц'));
   if(row2.length){ const tw = (cw - gap*(row2.length-1))/row2.length; row2.forEach((f,i)=> f(P + i*(tw+gap), tw)); y += 264 + gap; }
   const row3 = [];
+  if(opt.sport) row3.push((tx,tw) => metric(tx, tw, 252, 'СПОРТ', d.sport.pct, d.sport.w, '/'+d.sport.goal, d.sport.min ? `${d.sport.min} минут` : 'тренировок'));
   if(opt.blog) row3.push((tx,tw) => metric(tx, tw, 252, 'БЛОГ', d.blog.pct, d.blog.n, '/'+d.blog.of, 'публикаций'));
   if(opt.book && d.book) row3.push((tx,tw) => { tile(tx,y,tw,252,C.dark); lbl(d.book.lbl, tx+30, y+50, 'rgba(246,241,238,.6)');
     ctx.font = '800 30px CardMan'; ctx.fillStyle = C.light; const ls = cardWrap(ctx, d.book.t, tw-60, 3); ls.forEach((l,i)=>ctx.fillText(l, tx+30, y+100+i*35));
@@ -3865,11 +3866,11 @@ async function drawBlogCard(d, opt){
   return cv;
 }
 
-let blogCardOpt = { highlight:true, avg:true, tasks:true, sport:true, blog:true, book:true, photos:true };
-try{ const s = JSON.parse(localStorage.getItem('planner-cardopt')||'null'); if(s) blogCardOpt = Object.assign(blogCardOpt, s); delete blogCardOpt.habits; }catch(e){}
+let blogCardOpt = { highlight:true, avg:true, tasks:true, habits:true, sport:true, blog:true, book:true, photos:true };
+try{ const s = JSON.parse(localStorage.getItem('planner-cardopt')||'null'); if(s) blogCardOpt = Object.assign(blogCardOpt, s); }catch(e){}
 function openBlogCard(mode, cursor, highlight){
   const d = cardData(mode, cursor, highlight);
-  const items = [['highlight','Главное'],['avg','Оценка ★'],['tasks','Задачи'],['sport','Спорт'],['blog','Блог'],['book','Книга'],['photos','Фото']];
+  const items = [['highlight','Главное'],['avg','Оценка ★'],['tasks','Задачи'],['habits','Привычки'],['sport','Спорт'],['blog','Блог'],['book','Книга'],['photos','Фото']];
   openModal(`
     <div class="modal-title">Карточка для блога</div>
     <div class="card-prev"><div class="card-load"><div class="spinner"></div></div><img id="cardImg" alt="Карточка"></div>
