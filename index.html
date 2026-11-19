@@ -3602,10 +3602,10 @@ function blogMonth(key){
 }
 // публикации — журнал: { id, date, platform, topic, link }
 const BLOG_PLAT = [
-  { id:'tg',   label:'Telegram',  short:'ТГ',   goal:3, color:'#2AABEE' },
+  { id:'tg',   label:'Telegram',  short:'ТГ',   goal:5, color:'#2AABEE' },
   { id:'vk',   label:'ВКонтакте', short:'ВК',   goal:3, color:'#0077FF' },
-  { id:'clip', label:'Клип ВК',   short:'Клип', goal:1, color:'#8C5CF0' },
-  { id:'pin',  label:'Pinterest', short:'Pin',  goal:1, color:'#E60023' },
+  { id:'clip', label:'Клип ВК',   short:'Клип', goal:2, color:'#8C5CF0' },
+  { id:'pin',  label:'Pinterest', short:'Pin',  goal:3, color:'#E60023' },
 ];
 const blogPlat = id => BLOG_PLAT.find(p=>p.id===id) || BLOG_PLAT[0];
 function blogPostsIn(start, end){ return (state.blog.posts||[]).filter(p=>p.date>=start && p.date<=end).sort((a,b)=> b.date.localeCompare(a.date) || (b.createdAt||0)-(a.createdAt||0)); }
