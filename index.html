@@ -150,7 +150,18 @@
   .card-prev{position:relative; border-radius:14px; overflow:hidden; background:var(--surface2); aspect-ratio:1080/1350; margin-bottom:12px}
   .card-prev img{width:100%; height:100%; display:block}
   .card-load{position:absolute; inset:0; display:grid; place-items:center; background:var(--surface2)}
-  .card-opts{display:flex; flex-wrap:wrap; gap:6px}
+  .card-opts{display:flex; flex-wrap:wrap; gap:6px; margin-top:12px}
+  .card-ph-head{display:flex; justify-content:space-between; align-items:baseline; font-size:14px; margin-bottom:8px}
+  .card-ph{display:flex; gap:8px; flex-wrap:wrap}
+  .card-ph-it{position:relative; width:68px; height:68px; flex:none}
+  .card-ph-it img{width:100%; height:100%; object-fit:cover; border-radius:12px; display:block; cursor:pointer}
+  .card-ph-it button{position:absolute; top:-6px; right:-6px; width:22px; height:22px; border-radius:50%; border:0; background:#1C1416; color:#fff; display:grid; place-items:center; padding:0}
+  .card-ph-it button svg{width:12px; height:12px}
+  .card-ph-it em{position:absolute; left:0; right:0; bottom:0; font-style:normal; font-size:10px; color:#fff; background:rgba(0,0,0,.45); text-align:center; border-radius:0 0 12px 12px; padding:1px 0}
+  .card-ph-add{width:68px; height:68px; border-radius:12px; border:1.5px dashed var(--border); background:var(--surface2); color:var(--text-muted); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; flex:none}
+  .card-ph-add svg{width:20px; height:20px}
+  .card-ph-add span{font-size:10px; font-weight:700}
+  .card-ph-pick{margin-top:10px; padding:10px; border-radius:12px; background:var(--surface2)}
   .card-opts .pill.active{background:#D41F2A; border-color:#D41F2A; color:#fff}
   #tab-blog .quickadd button{background:var(--blog); color:#fff}
   .bl-prog{height:6px; border-radius:4px; background:var(--surface2); overflow:hidden; margin-bottom:10px}
@@ -3769,6 +3780,7 @@ function cardData(mode, cursor, highlight){
     sport: { w: wo.length, goal: 3*weeks, min: wo.reduce((a,w)=>a+(+w.duration||0),0), pct: Math.min(100, Math.round(wo.length/(3*weeks)*100)) },
     blog: { n: pubs, of: 8*blogWeeks.length, pct: Math.round(pubs/(8*blogWeeks.length)*100) },
     book: done.length ? { lbl: done.length>1 ? `ДОЧИТАЛА · ${done.length}` : 'ДОЧИТАЛА', t: done[0].title||'Без названия', a: done[0].author||'' } : reading.length ? { lbl:'ЧИТАЮ', t: reading[0].title||'Без названия', a: reading[0].author||'' } : null,
+    jphotos: js.photos.map(e=>({ date:e.date, src:e.photo })),
     photos: js.photos.map(e=>e.photo).slice(-4),
   };
 }
@@ -3796,8 +3808,8 @@ async function drawBlogCard(d, opt){
     if(!willPhotos){
       let h = 0, rows = 0;
       if(opt.highlight && d.highlight){ ctx.font = '800 40px CardMan'; h += 104 + cardWrap(ctx, d.highlight, cw-72, 2).length*49; rows++; }
-      if(opt.tasks || opt.habits){ h += 264; rows++; }
-      if(opt.sport || opt.blog || (opt.book && d.book)){ h += 252; rows++; }
+      if(opt.tasks || opt.sport){ h += 264; rows++; }
+      if(opt.blog || (opt.book && d.book)){ h += 252; rows++; }
       h += Math.max(0, rows-1)*gap;
       y += Math.max(0, Math.round((1278 - 70 - 234 - h)/2));
     }
@@ -3817,19 +3829,21 @@ async function drawBlogCard(d, opt){
     ctx.font = '800 40px CardMan'; ctx.fillStyle = '#fff'; lines.forEach((l,i)=> ctx.fillText(l, P+36, y+108+i*49));
     y += th + gap;
   }
-  // задачи + привычки
+  // ряд 1: задачи + спорт, ряд 2: блог + книга
+  const metric = (tx, tw, th, name, pct, n, of, line, extra) => {
+    tile(tx,y,tw,th); lbl(name, tx+30, y+50, null, pct);
+    const sz = th>=260 ? 84 : 72; big(String(n), of, tx+30, y+(th>=260?150:140), sz);
+    if(extra) extra(tx, y+(th>=260?194:184)); else sub(line, tx+30, y+(th>=260?194:184));
+    bar(pct, tx+30, y+th-40, tw-60);
+  };
   const row2 = [];
-  if(opt.tasks) row2.push(tx => { const tw = row2w; lbl('ЗАДАЧИ', tx+30, y+50, null, d.tasks.pct); big(String(d.tasks.done), '/'+d.tasks.total, tx+30, y+150, 84);
-    ctx.font = '600 22px CardMan'; ctx.fillStyle = C.muted; ctx.fillText('в срок ', tx+30, y+194); const ox = tx+30+ctx.measureText('в срок ').width; ctx.font = '800 22px CardMan'; ctx.fillStyle = cardColor(d.tasks.ontime); ctx.fillText(d.tasks.ontime+'%', ox, y+194);
-    bar(d.tasks.pct, tx+30, y+224, tw-60); });
-  if(opt.habits) row2.push(tx => { const tw = row2w; lbl('ПРИВЫЧКИ', tx+30, y+50, null, d.habits.pct); big(String(d.habits.pct), '%', tx+30, y+150, 84);
-    ctx.font = '600 22px CardMan'; sub(cardWrap(ctx, d.habits.names || `${d.habits.n} привычки`, tw-60, 1)[0]||'', tx+30, y+194); bar(d.habits.pct, tx+30, y+224, tw-60); });
-  let row2w = 0;
-  if(row2.length){ row2w = (cw - gap*(row2.length-1))/row2.length; row2.forEach((f,i)=>{ const tx = P + i*(row2w+gap); tile(tx,y,row2w,264); f(tx); }); y += 264 + gap; }
-  // спорт, блог, книга
+  if(opt.tasks) row2.push((tx,tw) => metric(tx, tw, 264, 'ЗАДАЧИ', d.tasks.pct, d.tasks.done, '/'+d.tasks.total, '', (ex,ey) => {
+    ctx.font = '600 22px CardMan'; ctx.fillStyle = C.muted; ctx.fillText('в срок ', ex+30, ey); const ox = ex+30+ctx.measureText('в срок ').width;
+    ctx.font = '800 22px CardMan'; ctx.fillStyle = cardColor(d.tasks.ontime); ctx.fillText(d.tasks.ontime+'%', ox, ey); }));
+  if(opt.sport) row2.push((tx,tw) => metric(tx, tw, 264, 'СПОРТ', d.sport.pct, d.sport.w, '/'+d.sport.goal, d.sport.min ? `${d.sport.min} минут` : 'тренировок'));
+  if(row2.length){ const tw = (cw - gap*(row2.length-1))/row2.length; row2.forEach((f,i)=> f(P + i*(tw+gap), tw)); y += 264 + gap; }
   const row3 = [];
-  if(opt.sport) row3.push((tx,tw) => { tile(tx,y,tw,252); lbl('СПОРТ', tx+30, y+50, null, d.sport.pct); big(String(d.sport.w), '/'+d.sport.goal, tx+30, y+140, 72); sub(d.sport.min ? `${d.sport.min} минут` : 'тренировок', tx+30, y+184); bar(d.sport.pct, tx+30, y+212, tw-60); });
-  if(opt.blog) row3.push((tx,tw) => { tile(tx,y,tw,252); lbl('БЛОГ', tx+30, y+50, null, d.blog.pct); big(String(d.blog.n), '/'+d.blog.of, tx+30, y+140, 72); sub('публикаций', tx+30, y+184); bar(d.blog.pct, tx+30, y+212, tw-60); });
+  if(opt.blog) row3.push((tx,tw) => metric(tx, tw, 252, 'БЛОГ', d.blog.pct, d.blog.n, '/'+d.blog.of, 'публикаций'));
   if(opt.book && d.book) row3.push((tx,tw) => { tile(tx,y,tw,252,C.dark); lbl(d.book.lbl, tx+30, y+50, 'rgba(246,241,238,.6)');
     ctx.font = '800 30px CardMan'; ctx.fillStyle = C.light; const ls = cardWrap(ctx, d.book.t, tw-60, 3); ls.forEach((l,i)=>ctx.fillText(l, tx+30, y+100+i*35));
     if(d.book.a){ ctx.font = '600 21px CardMan'; ctx.fillStyle = 'rgba(246,241,238,.7)'; ctx.fillText(cardWrap(ctx, d.book.a, tw-60, 1)[0], tx+30, y+100+ls.length*35+12); } });
@@ -3851,18 +3865,56 @@ async function drawBlogCard(d, opt){
   return cv;
 }
 
-let blogCardOpt = { highlight:true, avg:true, tasks:true, habits:true, sport:true, blog:true, book:true, photos:true };
-try{ const s = JSON.parse(localStorage.getItem('planner-cardopt')||'null'); if(s) blogCardOpt = Object.assign(blogCardOpt, s); }catch(e){}
+let blogCardOpt = { highlight:true, avg:true, tasks:true, sport:true, blog:true, book:true, photos:true };
+try{ const s = JSON.parse(localStorage.getItem('planner-cardopt')||'null'); if(s) blogCardOpt = Object.assign(blogCardOpt, s); delete blogCardOpt.habits; }catch(e){}
 function openBlogCard(mode, cursor, highlight){
   const d = cardData(mode, cursor, highlight);
-  const items = [['highlight','Главное'],['avg','Оценка ★'],['tasks','Задачи'],['habits','Привычки'],['sport','Спорт'],['blog','Блог'],['book','Книга'],['photos','Фото дня']];
+  const items = [['highlight','Главное'],['avg','Оценка ★'],['tasks','Задачи'],['sport','Спорт'],['blog','Блог'],['book','Книга'],['photos','Фото']];
   openModal(`
     <div class="modal-title">Карточка для блога</div>
     <div class="card-prev"><div class="card-load"><div class="spinner"></div></div><img id="cardImg" alt="Карточка"></div>
+    <div class="card-ph-head"><b>Фото на карточке</b><button class="bl-link" id="cardPhReset" style="color:#D41F2A">вернуть из дневника</button></div>
+    <div class="card-ph" id="cardPh"></div>
+    <div class="card-ph-pick" id="cardPhPick" style="display:none"></div>
+    <input type="file" accept="image/*" id="cardPhFile" style="display:none">
     <div class="card-opts">${items.map(([k,l])=>`<button class="pill ${blogCardOpt[k]?'active':''}" data-cardopt="${k}">${l}</button>`).join('')}</div>
     ${!d.highlight ? '<div class="hint" style="margin:8px 0 0">Главное событие пустое — впиши его в ретро, и оно появится на карточке.</div>' : ''}
     <div class="modal-actions"><button class="btn" id="cardSave">Сохранить</button>${navigator.share ? '<button class="btn btn-primary" id="cardShare" style="background:#D41F2A;color:#fff">Поделиться</button>' : ''}</div>`, async root => {
     let blob = null;
+    const phKey = `cardph-${mode}-${cursor}`;
+    // фото: ссылки на дневник {j:дата} или свои {c:dataURL}
+    const defRefs = () => d.jphotos.slice(-4).map(p => ({ j:p.date }));
+    let refs = defRefs();
+    try{ const saved = await loadKey(phKey, null); if(Array.isArray(saved)) refs = saved; }catch(e){}
+    let slot = -1; // какой слот меняем (-1 — добавляем новый)
+    const resolve = r => r.c ? r.c : ((d.jphotos.find(p=>p.date===r.j)||{}).src || null);
+    const syncPhotos = () => { refs = refs.filter(r => resolve(r)); d.photos = refs.map(resolve); };
+    const savePh = () => saveKey(phKey, refs);
+    const renderPh = () => {
+      syncPhotos();
+      $('#cardPh', root).innerHTML = refs.map((r,i)=>`<div class="card-ph-it"><img src="${resolve(r)}" data-phslot="${i}" alt=""><button data-phdel="${i}" aria-label="Убрать">${icon('x')}</button></div>`).join('')
+        + (refs.length<4 ? `<button class="card-ph-add" id="cardPhAdd">${icon('plus')}</button>` : '');
+      $$('[data-phslot]', root).forEach(el => el.addEventListener('click', ()=>{ slot = +el.dataset.phslot; openPick(); }));
+      $$('[data-phdel]', root).forEach(el => el.addEventListener('click', ()=>{ refs.splice(+el.dataset.phdel,1); savePh(); $('#cardPhPick', root).style.display='none'; renderPh(); redraw(); }));
+      const add = $('#cardPhAdd', root); if(add) add.addEventListener('click', ()=>{ slot = -1; openPick(); });
+    };
+    const put = r => { if(slot>=0) refs[slot] = r; else refs.push(r); savePh(); $('#cardPhPick', root).style.display='none'; renderPh(); redraw(); };
+    const openPick = () => {
+      const used = new Set(refs.filter(r=>r.j).map(r=>r.j));
+      const free = d.jphotos.filter(p=>!used.has(p.date));
+      const box = $('#cardPhPick', root);
+      box.innerHTML = `<div class="hint" style="margin:0 0 6px">${slot>=0?'Заменить на':'Добавить'}:</div><div class="card-ph">`
+        + `<button class="card-ph-add up" id="cardPhUp">${icon('camera')}<span>Загрузить</span></button>`
+        + free.map(p=>`<div class="card-ph-it"><img src="${p.src}" data-phj="${p.date}" alt=""><em>${fmtHuman(p.date)}</em></div>`).join('') + `</div>`;
+      box.style.display = '';
+      $('#cardPhUp', root).addEventListener('click', ()=> $('#cardPhFile', root).click());
+      $$('[data-phj]', box).forEach(el => el.addEventListener('click', ()=> put({ j: el.dataset.phj })));
+    };
+    $('#cardPhFile', root).addEventListener('change', async e => {
+      const f = e.target.files[0]; e.target.value = ''; if(!f) return;
+      try{ put({ c: await compressImage(f, 1200, 0.85) }); }catch(err){}
+    });
+    $('#cardPhReset', root).addEventListener('click', ()=>{ refs = defRefs(); savePh(); $('#cardPhPick', root).style.display='none'; renderPh(); redraw(); });
     const fname = `itogi-${mode==='week'?'nedeli':'mesyaca'}-${cursor}.png`;
     const redraw = async () => {
       $('.card-load', root).style.display = '';
@@ -3876,6 +3928,7 @@ function openBlogCard(mode, cursor, highlight){
       try{ localStorage.setItem('planner-cardopt', JSON.stringify(blogCardOpt)); }catch(e){}
       redraw();
     }));
+    renderPh();
     $('#cardSave', root).addEventListener('click', ()=>{ if(!blob) return; const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = fname; document.body.appendChild(a); a.click(); a.remove(); });
     const sh = $('#cardShare', root);
     if(sh) sh.addEventListener('click', async ()=>{
