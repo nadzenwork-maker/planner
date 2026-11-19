@@ -138,6 +138,48 @@
   .navbtn.active{color:var(--text);}
   .navbtn.active svg{transform:translateY(-1px);}
 
+  .navbtn.more{display:none}
+  @media (max-width:699px){ .navbtn.secondary{display:none} .navbtn.more{display:flex} }
+  .more-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; padding-bottom:6px}
+  .more-item{background:var(--surface2); border:1px solid var(--border); border-radius:14px; padding:16px 6px; display:flex; flex-direction:column; align-items:center; gap:8px; color:var(--text); font-weight:700; font-size:13px}
+  .more-item svg{width:24px; height:24px}
+  .more-item.active{border-color:var(--text)}
+  /* ---- блог ---- */
+  :root{ --blog:#D2553F; --blog-dim:#FBE9E5; }
+  #tab-blog .pill.active{background:var(--blog); border-color:var(--blog); color:#fff}
+  #tab-blog .quickadd button{background:var(--blog); color:#fff}
+  .bl-prog{height:6px; border-radius:4px; background:var(--surface2); overflow:hidden; margin-bottom:10px}
+  .bl-prog div{height:100%; background:var(--blog); transition:width .2s}
+  .bl-row{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 0; border-bottom:1px dashed var(--border)}
+  .bl-row:last-child{border-bottom:0}
+  .bl-lbl{font-size:13.5px; font-weight:700; flex:none; min-width:84px}
+  .bl-chks{display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end}
+  .bl-chk{display:flex; align-items:center; gap:6px; background:var(--surface2); border:1px solid var(--border); border-radius:20px; padding:5px 11px 5px 6px; font-size:13px; font-weight:700; color:var(--text-muted)}
+  .bl-chk i{width:18px; height:18px; border-radius:50%; border:2px solid var(--blog); display:grid; place-items:center; flex:none}
+  .bl-chk i svg{width:11px; height:11px}
+  .bl-chk.on{background:var(--blog-dim); border-color:var(--blog); color:var(--blog)}
+  .bl-chk.on i{background:var(--blog); color:#fff}
+  .bl-idea{display:flex; align-items:center; gap:8px; margin-bottom:6px}
+  .bl-idea span{width:22px; height:22px; border-radius:50%; background:var(--blog-dim); color:var(--blog); font-weight:800; font-size:12px; display:grid; place-items:center; flex:none}
+  .bl-idea input{flex:1}
+  .bl-link{background:none; border:0; color:var(--blog); font-weight:700; padding:0; font-size:inherit}
+  .bl-stats{display:grid; grid-template-columns:repeat(4,1fr); gap:6px; text-align:center}
+  .bl-stats b{display:block; font-size:22px; font-family:'Manrope'; font-weight:800}
+  .bl-stats b small{font-size:13px; color:var(--text-faint); font-weight:700}
+  .bl-stats span{font-size:11.5px; color:var(--text-muted)}
+  .bl-subs{display:flex; align-items:center; gap:8px; padding:6px 0}
+  .bl-subs input{width:0; flex:1; background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:9px 10px; color:var(--text)}
+  .bl-d{min-width:46px; text-align:right}
+  .bl-delta{font-size:14px} .bl-delta.up{color:var(--habit)} .bl-delta.down{color:var(--danger)}
+  .bl-bank{display:flex; align-items:center; gap:8px; padding:10px 0; border-bottom:1px dashed var(--border)}
+  .bl-bank:last-child{border-bottom:0}
+  .bl-bank-t{font-size:14px; white-space:pre-wrap; word-break:break-word}
+  .bl-bank.used .bl-bank-t{color:var(--text-faint); text-decoration:line-through}
+  .bl-icon{background:none; border:0; color:var(--text-faint); width:30px; height:30px; display:grid; place-items:center; flex:none}
+  .bl-icon svg{width:16px; height:16px}
+  .bl-bank.used [data-blused]{color:var(--habit)}
+  #tab-blog .field input[type=text], #tab-blog .field input[type=date]{width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px 12px; color:var(--text)}
+
   /* ---- calendar ---- */
   .cal-header{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;}
   .cal-header h2{font-size:17px; margin:0; font-weight:800;}
@@ -496,6 +538,7 @@
     <div class="tabpanel" id="tab-habits"></div>
     <div class="tabpanel" id="tab-sport"></div>
     <div class="tabpanel" id="tab-reading"></div>
+    <div class="tabpanel" id="tab-blog"></div>
     <div class="tabpanel" id="tab-goals"></div>
     <div class="tabpanel" id="tab-retro"></div>
   </main>
@@ -552,6 +595,7 @@ function icon(name, cls=''){
     download: '<path d="M12 3v12M7 11l5 5 5-5M5 21h14"/>',
     upload: '<path d="M12 21V9M7 13l5-5 5 5M5 3h14"/>',
     openbook: '<path d="M2 5h6a4 4 0 014 4v11a3 3 0 00-3-3H2z"/><path d="M22 5h-6a4 4 0 00-4 4v11a3 3 0 013-3h7z"/>',
+    more: '<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>',
     edit: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/>'
   };
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${cls}">${paths[name]||''}</svg>`;
@@ -717,6 +761,7 @@ const state = {
   tasks: [], lists: defaultLists(),
   habits: [], habitEntries: {},
   exercises: [], sportLogs: {}, workouts: [], measurements: [],
+  blog: { weeks:{}, months:{}, bank:[] },
   journal: [],
   goalsMonthly: [], goalsWeekly: [],
   otherColor: '#FF8A1F',
@@ -758,7 +803,7 @@ function normalizeHabits(){
   });
 }
 async function loadAll(){
-  const [t, h, s, j, g, st, rt, bk] = await Promise.all([
+  const [t, h, s, j, g, st, rt, bk, bl] = await Promise.all([
     loadKey('tasks-data', null),
     loadKey('habits-data', null),
     loadKey('sport-data', null),
@@ -767,6 +812,7 @@ async function loadAll(){
     loadKey('settings-data', null),
     loadKey('retro-data', null),
     loadKey('books-data', null),
+    loadKey('blog-data', null),
   ]);
   if(t){
     state.tasks = t.tasks || [];
@@ -788,6 +834,7 @@ async function loadAll(){
   if(g){ state.goalsMonthly=g.goalsMonthly||[]; state.goalsWeekly=g.goalsWeekly||[]; }
   if(st && st.otherColor){ state.otherColor = st.otherColor; }
   if(bk){ state.books = bk.books || []; }
+  if(bl){ state.blog = { weeks: bl.weeks||{}, months: bl.months||{}, bank: bl.bank||[] }; }
   if(rt){ state.retros = rt.retros || []; state.retros.forEach(r => { if(r.highlight===undefined) r.highlight=''; }); }
 }
 
@@ -799,10 +846,12 @@ const TABS = [
   { id:'habits', label:'Привычки', icon:'flame', title:'Привычки' },
   { id:'sport', label:'Спорт', icon:'dumbbell', title:'Спорт' },
   { id:'reading', label:'Чтение', icon:'openbook', title:'Чтение' },
+  { id:'blog', label:'Блог', icon:'edit', title:'Блог' },
   { id:'goals', label:'Цели', icon:'target', title:'Цели' },
   { id:'retro', label:'Ретро', icon:'book', title:'Ретро' },
 ];
 let activeTab = 'day';
+const NAV_MAIN = ['day','tasks','calendar','habits']; // на телефоне внизу, остальное — в «Ещё»
 let calMonth = monthKey(todayISO());
 let habitsMonthCursor = monthKey(todayISO());
 let goalsMonthCursor = monthKey(todayISO());
@@ -813,24 +862,31 @@ let retroMonthCursor = monthKey(todayISO());
 
 function renderNav(){
   const wrap = $('#navwrap');
+  const inMore = !NAV_MAIN.includes(activeTab);
+  const cur = TABS.find(t=>t.id===activeTab);
   wrap.innerHTML = TABS.map(t => `
-    <button class="navbtn ${activeTab===t.id?'active':''}" data-tab="${t.id}">
+    <button class="navbtn ${NAV_MAIN.includes(t.id)?'':'secondary'} ${activeTab===t.id?'active':''}" data-tab="${t.id}">
       ${icon(t.icon)}
       <span>${t.label}</span>
-    </button>`).join('');
-  $$('.navbtn', wrap).forEach(b => b.addEventListener('click', ()=> switchTab(b.dataset.tab)));
+    </button>`).join('') + `
+    <button class="navbtn more ${inMore?'active':''}" id="navMore">
+      ${inMore ? icon(cur.icon) : icon('more')}
+      <span>${inMore ? cur.label : 'Ещё'}</span>
+    </button>`;
+  $$('.navbtn[data-tab]', wrap).forEach(b => b.addEventListener('click', ()=> switchTab(b.dataset.tab)));
+  $('#navMore').addEventListener('click', openMoreMenu);
 }
 function switchTab(id){
   activeTab = id;
   $$('.tabpanel').forEach(p => p.classList.remove('active'));
   $('#tab-'+id).classList.add('active');
-  $$('.navbtn').forEach(b => b.classList.toggle('active', b.dataset.tab===id));
+  renderNav();
   $('#headerTitle').textContent = TABS.find(t=>t.id===id).title;
   renderActive();
 }
 function renderActive(){
   ({ day: renderDay, tasks: renderTasks, calendar: renderCalendar, habits: renderHabits,
-     sport: renderSport, reading: renderReading, goals: renderGoals, retro: renderRetro })[activeTab]();
+     sport: renderSport, reading: renderReading, blog: renderBlog, goals: renderGoals, retro: renderRetro })[activeTab]();
 }
 function renderAllHeader(){
   const d = new Date();
@@ -2690,6 +2746,7 @@ function exportBackup(){
     journal: state.journal,
     goalsMonthly: state.goalsMonthly, goalsWeekly: state.goalsWeekly,
     retros: state.retros, otherColor: state.otherColor,
+    blog: state.blog,
     books: state.books, bookCovers: Object.fromEntries(Object.entries(coverCache).filter(([,v])=>v)),
     exportedAt: new Date().toISOString()
   };
@@ -2714,9 +2771,10 @@ function importBackup(e){
       state.journal = data.journal || [];
       state.goalsMonthly = data.goalsMonthly || []; state.goalsWeekly = data.goalsWeekly || [];
       state.books = data.books || []; Object.entries(data.bookCovers||{}).forEach(([id,v])=>{ coverCache[id]=v; saveKey('cover-'+id, v); });
+      if(data.blog) state.blog = data.blog;
       state.retros = data.retros || []; state.otherColor = data.otherColor || state.otherColor;
       normalizeTasksAndLists(); normalizeHabits();
-      persistTasks(); persistHabits(); persistSport(); persistJournal(); persistGoals(); persistRetro(); persistSettings(); persistBooks();
+      persistTasks(); persistHabits(); persistSport(); persistJournal(); persistGoals(); persistRetro(); persistSettings(); persistBooks(); persistBlog();
       closeModal(); renderActive();
     }catch(err){ alert('Не удалось прочитать файл — проверь, что это тот самый экспортированный JSON.'); }
   };
@@ -3490,6 +3548,162 @@ function openBookModal(id){
       if(d.status==='done' && d.end) readMonth = d.end.slice(0,7);
       persistBooks(); closeModal(); renderReading();
     });
+  });
+}
+
+/* ============================= БЛОГ ============================= */
+let blogMode = 'week';
+let blogWeekCursor = weekStartISO(todayISO());
+let blogMonthCursor = monthKey(todayISO());
+const persistBlog = debounce(()=> saveKey('blog-data', state.blog), 400);
+function blogWeek(key){
+  if(!state.blog.weeks[key]) state.blog.weeks[key] = { theme:'', ideas:['','',''], shootDate:'', shoot:'', summary:'', tg:{mon:false,wed:false,fri:false}, vk:[false,false,false], clip:false, pin:false };
+  const w = state.blog.weeks[key];
+  w.ideas = w.ideas || ['','','']; while(w.ideas.length<3) w.ideas.push('');
+  w.tg = w.tg || {mon:false,wed:false,fri:false}; w.vk = w.vk || [false,false,false];
+  return w;
+}
+function blogMonth(key){
+  if(!state.blog.months[key]) state.blog.months[key] = { hits:'', tgStart:'', tgEnd:'', vkStart:'', vkEnd:'', next:'' };
+  return state.blog.months[key];
+}
+function blogPubCount(w){ return ['mon','wed','fri'].filter(k=>w.tg[k]).length + w.vk.filter(Boolean).length + (w.clip?1:0) + (w.pin?1:0); }
+function blogWeekIsEmpty(w){ return !w || (!w.theme && !w.ideas.some(Boolean) && !w.shoot && !w.summary && !blogPubCount(w)); }
+function blogWeeksOfMonth(mk){ // недели, понедельник которых в этом месяце
+  const [y,m] = mk.split('-').map(Number); const out = [];
+  let d = weekStartISO(`${y}-${pad2(m)}-01`); if(d < `${y}-${pad2(m)}-01`) d = addDaysISO(d,7);
+  for(; d.slice(0,7)===mk; d = addDaysISO(d,7)) out.push(d);
+  return out;
+}
+function blogDelta(a,b){ if(a===''||b===''||a==null||b==null||isNaN(+a)||isNaN(+b)) return null; return (+b)-(+a); }
+const blogChk = (on, attrs, label) => `<button class="bl-chk ${on?'on':''}" ${attrs}><i>${on?icon('check'):''}</i><span>${label}</span></button>`;
+
+function renderBlog(){
+  const root = $('#tab-blog');
+  const head = `
+    <div class="row-gap" style="margin:6px 0 12px;">
+      <button class="pill ${blogMode==='week'?'active':''}" data-blmode="week">Неделя</button>
+      <button class="pill ${blogMode==='month'?'active':''}" data-blmode="month">Месяц</button>
+      <button class="pill ${blogMode==='bank'?'active':''}" data-blmode="bank">Банк идей${state.blog.bank.filter(b=>!b.used).length?` · ${state.blog.bank.filter(b=>!b.used).length}`:''}</button>
+    </div>`;
+  let body = '';
+  if(blogMode==='week'){
+    const k = blogWeekCursor, w = blogWeek(k), n = blogPubCount(w);
+    const fresh = state.blog.bank.filter(b=>!b.used);
+    body = `
+      <div class="cal-header"><button class="cal-nav" id="blPrev">${icon('chevLeft')}</button><h2>${weekLabel(k)}</h2><button class="cal-nav" id="blNext">${icon('chevRight')}</button></div>
+      <div class="section-title"><h2>Публикации</h2><span class="count">${n} из 8</span></div>
+      <div class="card">
+        <div class="bl-prog"><div style="width:${Math.round(n/8*100)}%"></div></div>
+        <div class="bl-row"><span class="bl-lbl">Telegram</span><div class="bl-chks">${[['mon','Пн'],['wed','Ср'],['fri','Пт']].map(([d,l])=>blogChk(w.tg[d], `data-bltg="${d}"`, l)).join('')}</div></div>
+        <div class="bl-row"><span class="bl-lbl">ВКонтакте</span><div class="bl-chks">${w.vk.map((v,i)=>blogChk(v, `data-blvk="${i}"`, `${i+1}`)).join('')}</div></div>
+        <div class="bl-row"><span class="bl-lbl">Клип ВК</span><div class="bl-chks">${blogChk(w.clip,'data-blflag="clip"', w.clip?'выложен':'нет')}</div></div>
+        <div class="bl-row"><span class="bl-lbl">Pinterest</span><div class="bl-chks">${blogChk(w.pin,'data-blflag="pin"', w.pin?'пины добавлены':'нет')}</div></div>
+      </div>
+      <div class="section-title"><h2>План недели</h2></div>
+      <div class="card">
+        <div class="field"><label>Тема / эксперимент недели</label><input type="text" data-blw="theme" value="${escapeHtml(w.theme)}" placeholder="Что пробую на этой неделе"></div>
+        <div class="field"><label>3 идеи для постов (ТГ + ВК)</label>
+          ${w.ideas.map((v,i)=>`<div class="bl-idea"><span>${i+1}</span><input type="text" data-blidea="${i}" value="${escapeHtml(v)}" placeholder="Идея ${i+1}"></div>`).join('')}
+          ${fresh.length && w.ideas.some(x=>!x) ? `<div class="hint" style="margin-top:6px">Можно взять из банка идей — там ${fresh.length}. <button class="bl-link" data-blmode="bank">Открыть банк</button></div>` : ''}
+        </div>
+        <div class="field"><label>Съёмочный день</label>
+          <div style="display:flex; gap:8px;"><input type="date" data-blw="shootDate" value="${w.shootDate||''}" style="flex:0 0 150px"><input type="text" data-blw="shoot" value="${escapeHtml(w.shoot)}" placeholder="Что снимаю" style="flex:1; min-width:0"></div>
+        </div>
+        <div class="field" style="margin-bottom:0"><label>Итог недели для ретро-поста</label><textarea data-blw="summary" placeholder="Что получилось, что нет, что поняла">${escapeHtml(w.summary)}</textarea></div>
+      </div>`;
+  } else if(blogMode==='month'){
+    const mk = blogMonthCursor, mo = blogMonth(mk), [y,m] = mk.split('-').map(Number);
+    const weeks = blogWeeksOfMonth(mk).map(k=>({k, w: state.blog.weeks[k] ? blogWeek(k) : null}));
+    const sum = f => weeks.reduce((a,x)=>a+(x.w?f(x.w):0),0);
+    const tg = sum(w=>['mon','wed','fri'].filter(d=>w.tg[d]).length), vk = sum(w=>w.vk.filter(Boolean).length);
+    const clips = sum(w=>w.clip?1:0), pins = sum(w=>w.pin?1:0), plan = weeks.length*3;
+    const dTg = blogDelta(mo.tgStart, mo.tgEnd), dVk = blogDelta(mo.vkStart, mo.vkEnd);
+    const sign = d => d===null ? '' : `<b class="bl-delta ${d>0?'up':d<0?'down':''}">${d>0?'+':''}${d}</b>`;
+    body = `
+      <div class="cal-header"><button class="cal-nav" id="blPrev">${icon('chevLeft')}</button><h2>${MONTHS_NOM[m-1]} ${y}</h2><button class="cal-nav" id="blNext">${icon('chevRight')}</button></div>
+      <div class="section-title"><h2>Публикации за месяц</h2></div>
+      <div class="card bl-stats">
+        <div><b>${tg}<small>/${plan}</small></b><span>Telegram</span></div>
+        <div><b>${vk}<small>/${plan}</small></b><span>ВК посты</span></div>
+        <div><b>${clips}<small>/${weeks.length}</small></b><span>Клипы</span></div>
+        <div><b>${pins}<small>/${weeks.length}</small></b><span>Pinterest</span></div>
+      </div>
+      ${weeks.some(x=>x.w && x.w.theme) ? `<div class="card" style="padding:6px 14px">${weeks.filter(x=>x.w && x.w.theme).map(x=>`<div class="minirow" data-blweek="${x.k}" style="cursor:pointer"><div class="l" style="font-size:13px"><span class="hint" style="margin:0 8px 0 0">${weekLabel(x.k)}</span>${escapeHtml(x.w.theme)}</div><span class="hint" style="margin:0">${blogPubCount(x.w)}/8</span></div>`).join('')}</div>` : ''}
+      <div class="section-title"><h2>Подписчики</h2></div>
+      <div class="card">
+        ${[['tg','Telegram'],['vk','ВКонтакте']].map(([p,l])=>`
+          <div class="bl-subs"><span class="bl-lbl">${l}</span>
+            <input type="number" inputmode="numeric" data-blm="${p}Start" value="${mo[p+'Start']}" placeholder="на 1-е">
+            <span class="hint" style="margin:0">→</span>
+            <input type="number" inputmode="numeric" data-blm="${p}End" value="${mo[p+'End']}" placeholder="на конец">
+            <span class="bl-d" data-bld="${p}">${sign(p==='tg'?dTg:dVk)}</span>
+          </div>`).join('')}
+      </div>
+      <div class="section-title"><h2>Итоги месяца</h2></div>
+      <div class="card">
+        <div class="field"><label>Что зашло из контента</label><textarea data-blm="hits" placeholder="По ощущениям: какие посты отозвались, где было больше реакций">${escapeHtml(mo.hits)}</textarea></div>
+        <div class="field" style="margin-bottom:0"><label>Что попробовать в следующем месяце</label><textarea data-blm="next" placeholder="Новые форматы, рубрики, эксперименты">${escapeHtml(mo.next)}</textarea></div>
+      </div>`;
+  } else {
+    const bank = state.blog.bank;
+    const open = bank.filter(b=>!b.used).sort((a,b)=>b.createdAt-a.createdAt), used = bank.filter(b=>b.used).sort((a,b)=>b.createdAt-a.createdAt);
+    const w = blogWeek(weekStartISO(todayISO()));
+    const canMove = w.ideas.some(x=>!x);
+    const row = b => `<div class="bl-bank ${b.used?'used':''}">
+        <div style="flex:1; min-width:0"><div class="bl-bank-t">${escapeHtml(b.text)}</div><div class="hint" style="margin:2px 0 0">${fmtHuman(isoDate(new Date(b.createdAt)))}${b.used?' · взята в работу':''}</div></div>
+        ${!b.used && canMove ? `<button class="btn small" data-blmove="${b.id}" title="В идеи этой недели">→ в неделю</button>` : ''}
+        <button class="bl-icon" data-blused="${b.id}" title="${b.used?'Вернуть':'Отметить использованной'}">${icon('check')}</button>
+        <button class="bl-icon" data-bldel="${b.id}" title="Удалить">${icon('x')}</button>
+      </div>`;
+    body = `
+      <p class="hint" style="margin:0 4px 10px">Скидывай сюда всё, что зацепило: фразу, наблюдение, мысль. Когда садишься писать — бери отсюда.</p>
+      <div class="quickadd" style="margin-bottom:12px"><input type="text" id="blBankInp" placeholder="Мысль, фраза, наблюдение…"><button id="blBankAdd">${icon('plus')}</button></div>
+      ${open.length ? `<div class="card" style="padding:4px 14px">${open.map(row).join('')}</div>` : `<div class="card rd-empty">Пока пусто. Первая мысль — самая ценная 🙂</div>`}
+      ${used.length ? `<div class="section-title"><h2>Использованные</h2><span class="count">${used.length}</span></div><div class="card" style="padding:4px 14px">${used.map(row).join('')}</div>` : ''}`;
+  }
+  root.innerHTML = head + body;
+
+  $$('[data-blmode]', root).forEach(b => b.addEventListener('click', ()=>{ blogMode = b.dataset.blmode; renderBlog(); }));
+  const prev = $('#blPrev'), next = $('#blNext');
+  if(prev){
+    prev.addEventListener('click', ()=>{ if(blogMode==='week') blogWeekCursor = addDaysISO(blogWeekCursor,-7); else blogMonthCursor = shiftMonth(blogMonthCursor,-1); renderBlog(); });
+    next.addEventListener('click', ()=>{ if(blogMode==='week') blogWeekCursor = addDaysISO(blogWeekCursor,7); else blogMonthCursor = shiftMonth(blogMonthCursor,1); renderBlog(); });
+  }
+  if(blogMode==='week'){
+    const w = blogWeek(blogWeekCursor);
+    $$('[data-bltg]', root).forEach(b => b.addEventListener('click', ()=>{ w.tg[b.dataset.bltg] = !w.tg[b.dataset.bltg]; persistBlog(); renderBlog(); }));
+    $$('[data-blvk]', root).forEach(b => b.addEventListener('click', ()=>{ const i=+b.dataset.blvk; w.vk[i] = !w.vk[i]; persistBlog(); renderBlog(); }));
+    $$('[data-blflag]', root).forEach(b => b.addEventListener('click', ()=>{ const f=b.dataset.blflag; w[f] = !w[f]; persistBlog(); renderBlog(); }));
+    $$('[data-blw]', root).forEach(el => el.addEventListener('input', ()=>{ w[el.dataset.blw] = el.value; persistBlog(); }));
+    $$('[data-blidea]', root).forEach(el => el.addEventListener('input', ()=>{ w.ideas[+el.dataset.blidea] = el.value; persistBlog(); }));
+  } else if(blogMode==='month'){
+    const mo = blogMonth(blogMonthCursor);
+    $$('[data-blweek]', root).forEach(el => el.addEventListener('click', ()=>{ blogWeekCursor = el.dataset.blweek; blogMode='week'; renderBlog(); }));
+    $$('[data-blm]', root).forEach(el => el.addEventListener('input', ()=>{
+      mo[el.dataset.blm] = el.value; persistBlog();
+      ['tg','vk'].forEach(p => { const d = blogDelta(mo[p+'Start'], mo[p+'End']); const s = $(`[data-bld="${p}"]`, root); if(s) s.innerHTML = d===null ? '' : `<b class="bl-delta ${d>0?'up':d<0?'down':''}">${d>0?'+':''}${d}</b>`; });
+    }));
+  } else {
+    const inp = $('#blBankInp');
+    const add = () => { const v = inp.value.trim(); if(!v) return; state.blog.bank.push({ id: uid(), text: v, createdAt: Date.now(), used:false }); persistBlog(); renderBlog(); $('#blBankInp').focus(); };
+    $('#blBankAdd').addEventListener('click', add);
+    inp.addEventListener('keydown', e => { if(e.key==='Enter') add(); });
+    $$('[data-blused]', root).forEach(b => b.addEventListener('click', ()=>{ const x = state.blog.bank.find(q=>q.id===b.dataset.blused); x.used = !x.used; persistBlog(); renderBlog(); }));
+    $$('[data-bldel]', root).forEach(b => b.addEventListener('click', ()=>{ state.blog.bank = state.blog.bank.filter(q=>q.id!==b.dataset.bldel); persistBlog(); renderBlog(); }));
+    $$('[data-blmove]', root).forEach(b => b.addEventListener('click', ()=>{
+      const x = state.blog.bank.find(q=>q.id===b.dataset.blmove); const w = blogWeek(weekStartISO(todayISO()));
+      const i = w.ideas.findIndex(v=>!v); if(i<0) return;
+      w.ideas[i] = x.text; x.used = true; persistBlog(); renderBlog();
+    }));
+  }
+}
+
+/* «Ещё» в нижнем меню на телефоне */
+function openMoreMenu(){
+  const items = TABS.filter(t => !NAV_MAIN.includes(t.id));
+  openModal(`<div class="modal-title">Разделы</div><div class="more-grid">${items.map(t=>`<button class="more-item ${activeTab===t.id?'active':''}" data-moretab="${t.id}">${icon(t.icon)}<span>${t.label}</span></button>`).join('')}</div>`, root => {
+    $$('[data-moretab]').forEach(b => b.addEventListener('click', ()=>{ closeModal(); switchTab(b.dataset.moretab); }));
   });
 }
 
