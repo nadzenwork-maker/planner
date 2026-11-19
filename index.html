@@ -3779,7 +3779,7 @@ function cardData(mode, cursor, highlight){
     habits: { pct: hs.avgPct, n: hs.results.length },
     sport: { w: wo.length, goal: 3*weeks, min: wo.reduce((a,w)=>a+(+w.duration||0),0), pct: Math.min(100, Math.round(wo.length/(3*weeks)*100)) },
     blog: { n: pubs, of: 8*blogWeeks.length, pct: Math.round(pubs/(8*blogWeeks.length)*100) },
-    book: done.length ? { lbl: done.length>1 ? `ДОЧИТАЛА · ${done.length}` : 'ДОЧИТАЛА', t: done[0].title||'Без названия', a: done[0].author||'' } : reading.length ? { lbl:'ЧИТАЮ', t: reading[0].title||'Без названия', a: reading[0].author||'' } : null,
+    book: done.length ? { lbl: done.length>1 ? `ДОЧИТАЛА · ${done.length}` : 'ДОЧИТАЛА', t: done[0].title||'Без названия', a: done[0].author||'', id: done[0].id, hasCover: !!done[0].hasCover } : reading.length ? { lbl:'ЧИТАЮ', t: reading[0].title||'Без названия', a: reading[0].author||'', id: reading[0].id, hasCover: !!reading[0].hasCover } : null,
     jphotos: js.photos.map(e=>({ date:e.date, src:e.photo })),
     photos: js.photos.map(e=>e.photo).slice(-4),
   };
@@ -3787,6 +3787,8 @@ function cardData(mode, cursor, highlight){
 
 async function drawBlogCard(d, opt){
   await loadCardFonts();
+  let coverImg = null;
+  if(opt.book && d.book && d.book.hasCover){ try{ const src = await loadCover(d.book.id); if(src) coverImg = await cardLoadImg(src); }catch(e){} }
   const C = CARD, W = C.W, P = C.P, cw = W - 2*P, gap = 18;
   const cv = document.createElement('canvas'); cv.width = W; cv.height = C.H;
   const ctx = cv.getContext('2d');
@@ -3845,10 +3847,22 @@ async function drawBlogCard(d, opt){
   const row3 = [];
   if(opt.sport) row3.push((tx,tw) => metric(tx, tw, 252, 'СПОРТ', d.sport.pct, d.sport.w, '/'+d.sport.goal, d.sport.min ? `${d.sport.min} минут` : 'тренировок'));
   if(opt.blog) row3.push((tx,tw) => metric(tx, tw, 252, 'БЛОГ', d.blog.pct, d.blog.n, '/'+d.blog.of, 'публикаций'));
-  if(opt.book && d.book) row3.push((tx,tw) => { tile(tx,y,tw,252,C.dark); lbl(d.book.lbl, tx+30, y+50, 'rgba(246,241,238,.6)');
-    ctx.font = '800 30px CardMan'; ctx.fillStyle = C.light; const ls = cardWrap(ctx, d.book.t, tw-60, 3); ls.forEach((l,i)=>ctx.fillText(l, tx+30, y+100+i*35));
-    if(d.book.a){ ctx.font = '600 21px CardMan'; ctx.fillStyle = 'rgba(246,241,238,.7)'; ctx.fillText(cardWrap(ctx, d.book.a, tw-60, 1)[0], tx+30, y+100+ls.length*35+12); } });
-  if(row3.length){ const tw = (cw - gap*(row3.length-1))/row3.length; row3.forEach((f,i)=> f(P + i*(tw+gap), tw)); y += 252 + gap; }
+  const w3 = [];
+  if(opt.sport) w3.push(1); if(opt.blog) w3.push(1);
+  if(opt.book && d.book) row3.push((tx,tw) => { tile(tx,y,tw,252,C.dark);
+    let txX = tx+30, txW = tw-60;
+    if(coverImg){ // обложка слева, текст справа
+      const ch = 252-44, cwid = Math.round(ch*2/3), cx = tx+22, cy = y+22;
+      ctx.save(); cardRR(ctx, cx, cy, cwid, ch, 12); ctx.clip();
+      const sc = Math.max(cwid/coverImg.width, ch/coverImg.height); ctx.drawImage(coverImg, cx+(cwid-coverImg.width*sc)/2, cy+(ch-coverImg.height*sc)/2, coverImg.width*sc, coverImg.height*sc);
+      ctx.restore(); txX = cx + cwid + 24; txW = tx + tw - 26 - txX;
+    }
+    lbl(d.book.lbl, txX, y+50, 'rgba(246,241,238,.6)');
+    const fs = coverImg ? 26 : 30, lh = coverImg ? 31 : 35;
+    ctx.font = `800 ${fs}px CardMan`; ctx.fillStyle = C.light; const ls = cardWrap(ctx, d.book.t, txW, coverImg ? 4 : 3); ls.forEach((l,i)=>ctx.fillText(l, txX, y+98+i*lh));
+    if(d.book.a){ ctx.font = '600 20px CardMan'; ctx.fillStyle = 'rgba(246,241,238,.7)'; ctx.fillText(cardWrap(ctx, d.book.a, txW, 1)[0], txX, y+98+ls.length*lh+10); } });
+  if(opt.book && d.book) w3.push(coverImg ? (w3.length ? 1.6 : 1) : 1);
+  if(row3.length){ const tot = w3.reduce((a,b)=>a+b,0), free = cw - gap*(row3.length-1); let xx = P; row3.forEach((f,i)=>{ const tw = free*w3[i]/tot; f(xx, tw); xx += tw + gap; }); y += 252 + gap; }
   // фото
   const footY = 1278;
   if(opt.photos && d.photos.length){
